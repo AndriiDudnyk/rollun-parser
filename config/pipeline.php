@@ -81,7 +81,7 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
     $app->pipe(SessionMiddleware::class);
 
     // Check permissions using ACL
-    $app->pipe(PermissionMiddleware::class);
+//    $app->pipe(PermissionMiddleware::class);
 
     // Register the dispatch middleware in the middleware pipeline
     $app->pipe(DispatchMiddleware::class);

@@ -6,6 +6,7 @@
 
 declare(strict_types = 1);
 
+use Parser\LoaderManager;
 use Psr\Container\ContainerInterface;
 use rollun\datastore\Middleware\DataStoreApi;
 use rollun\permission\ConfigProvider;
@@ -49,12 +50,6 @@ use Zend\Expressive\MiddlewareFactory;
  */
 return function (Application $app, MiddlewareFactory $factory, ContainerInterface $container): void {
     $app->get(
-        '/',
-        App\Handler\HomePageHandler::class,
-        'home-page'
-    );
-
-    $app->get(
         '/oauth/redirect',
         RedirectMiddleware::class,
         'oauth-redirect'
@@ -83,5 +78,11 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
         DataStoreApi::class,
         ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         DataStoreApi::class
+    );
+
+    $app->get(
+        '/parse',
+        LoaderManager::class,
+        LoaderManager::class
     );
 };

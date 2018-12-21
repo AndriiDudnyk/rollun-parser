@@ -6,7 +6,9 @@
 
 declare(strict_types = 1);
 
-namespace App;
+namespace Parser;
+
+use Parser\Manager\LoaderManager;
 
 /**
  * The configuration provider for the App module
@@ -36,7 +38,8 @@ class ConfigProvider
     {
         return [
             'invokables' => [
-                Handler\HomePageHandler::class => Handler\HomePageHandler::class,
+                UserAgentGenerator::class => UserAgentGenerator::class,
+                LoaderManager::class => LoaderManager::class,
             ],
         ];
     }

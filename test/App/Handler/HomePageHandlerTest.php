@@ -8,7 +8,7 @@ declare(strict_types = 1);
 
 namespace AppTest\Handler;
 
-use App\Handler\HomePageHandler;
+use Parser\Handler\HomePageHandler;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;

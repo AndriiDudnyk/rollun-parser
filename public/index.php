@@ -19,6 +19,8 @@ if (PHP_SAPI === 'cli-server' && $_SERVER['SCRIPT_FILENAME'] !== __FILE__) {
     return false;
 }
 
+error_reporting(E_ALL ^ E_DEPRECATED ^ E_USER_DEPRECATED);
+
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 

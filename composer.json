@@ -38,6 +38,7 @@
   },
   "require": {
     "php": "^7.1",
+    "psr/http-client": "^1.0",
     "rollun-com/rollun-datastore": "^6",
     "rollun-com/rollun-logger": "^4.2",
     "rollun-com/rollun-permission": "^4.0.3",
@@ -57,11 +58,14 @@
     "squizlabs/php_codesniffer": "^3",
     "zendframework/zend-expressive-tooling": "^1.0",
     "zfcampus/zf-development-mode": "^3.1",
-    "filp/whoops": "^2.1.12"
+    "filp/whoops": "^2.1.12",
+    "electrolinux/phpquery": "^0.9.6",
+    "phly/http": "^0.14.1",
+    "guzzlehttp/guzzle": "^6.3"
   },
   "autoload": {
     "psr-4": {
-      "App\\": "src/App/"
+      "Parser\\": "src/Parser/src"
     }
   },
   "autoload-dev": {
