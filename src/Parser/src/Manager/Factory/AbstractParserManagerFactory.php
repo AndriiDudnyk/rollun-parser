@@ -8,33 +8,19 @@ namespace Parser\Manager\Factory;
 
 use Interop\Container\ContainerInterface;
 use Parser\Manager\BaseParserManager;
-use Zend\ServiceManager\Factory\AbstractFactoryInterface;
 
-abstract class AbstractParserManagerAbstractFactory implements AbstractFactoryInterface
+abstract class AbstractParserManagerFactory
 {
     const KEY = 'parserManagers';
 
     const KEY_CLASS = 'class';
 
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $serviceConfig = $this->getServiceConfig($container, $requestedName);
-
-        if (empty($serviceConfig[self::KEY_CLASS])) {
-            return false;
-        }
-
-        return $this->isClassCorrect($serviceConfig[self::KEY_CLASS]);
-    }
-
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName)
     {
         $serviceConfig = $this->getServiceConfig($container, $requestedName);
 
         return $this->createParserManager($container, $serviceConfig);
     }
-
-    abstract protected function isClassCorrect($class): bool;
 
     abstract protected function createParserManager(
         ContainerInterface $container,

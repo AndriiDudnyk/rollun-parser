@@ -12,6 +12,7 @@ use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use rollun\datastore\Rql\RqlQuery;
 use rollun\dic\InsideConstruct;
+use RuntimeException;
 
 class BaseParserManager
 {
@@ -20,6 +21,8 @@ class BaseParserManager
     protected $parseResultDataStore;
 
     protected $documentDataStore;
+
+    protected $options;
 
     /**
      * @var LoggerInterface
@@ -30,20 +33,17 @@ class BaseParserManager
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
         DocumentDataStoreInterface $documentDataStore,
+        array $options,
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(["logger" => LoggerInterface::class]);
         $this->parser = $parser;
         $this->parseResultDataStore = $parseResultDataStore;
         $this->documentDataStore = $documentDataStore;
+        $this->options = $options;
     }
 
     public function __invoke()
-    {
-        $this->parse();
-    }
-
-    public function parse()
     {
         if (!$document = $this->getDocument($this->parser->getName())) {
             $this->logger->info("Free documents for parser manager not found");
@@ -57,7 +57,11 @@ class BaseParserManager
                 'status' => 1,
             ]);
             $this->logger->info("Parser successfully finish parsing document #{$document['id']}");
-            $this->processResult($records);
+            $records = $this->processResult($records);
+
+            if ($records) {
+                $this->saveResult($records);
+            }
         } catch (\Throwable $t) {
             $this->logger->info("Parser failed parsing document #{$document['id']}", [
                 'exception' => $t,
@@ -65,7 +69,12 @@ class BaseParserManager
         }
     }
 
-    protected function processResult($records)
+    protected function processResult(array $records): ?array
+    {
+        return $records;
+    }
+
+    protected function saveResult(array $records)
     {
         foreach ($records as $record) {
             $this->parseResultDataStore->create($record);
@@ -74,7 +83,11 @@ class BaseParserManager
 
     protected function getDocument($parser): ?array
     {
-        $tasks = $this->documentDataStore->query(new RqlQuery("and(eq(status,0),eq(parser,{$parser}))"));
+        try {
+            $tasks = $this->documentDataStore->query(new RqlQuery("and(eq(status,0),eq(parser,{$parser}))"));
+        } catch (\Throwable $t) {
+            throw new RuntimeException("Can't load document for parser '{$parser}'", 0, $t);
+        }
 
         if (!count($tasks)) {
             return null;

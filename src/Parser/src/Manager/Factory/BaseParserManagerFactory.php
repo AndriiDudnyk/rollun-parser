@@ -13,7 +13,7 @@ use Parser\Manager\BaseParserManager;
 use Parser\Parser\ParserInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 
-class BaseParserManagerAbstractFactory extends AbstractParserManagerAbstractFactory
+class BaseParserManagerFactory extends AbstractParserManagerFactory
 {
     const KEY_PARSER = 'parser';
 
@@ -21,18 +21,16 @@ class BaseParserManagerAbstractFactory extends AbstractParserManagerAbstractFact
 
     const KEY_PARSE_RESULT_DATASTORE = 'parseResultDataStore';
 
-    protected function isClassCorrect($class): bool
-    {
-        return is_a($class, BaseParserManager::class, true);
-    }
+    const KEY_OPTIONS = 'options';
 
     protected function createParserManager(ContainerInterface $container, array $serviceConfig): BaseParserManager
     {
         $parser = $this->createParser($container, $serviceConfig);
         $parseResultDataStore = $this->createParseResultDataStore($container, $serviceConfig);
         $documentDataStore = $this->createDocumentDataStore($container, $serviceConfig);
+        $options = $this->getOptions($serviceConfig);
 
-        return new BaseParserManager($parser, $parseResultDataStore, $documentDataStore);
+        return new BaseParserManager($parser, $parseResultDataStore, $documentDataStore, $options);
     }
 
     protected function createParser(ContainerInterface $container, array $serviceConfig): ParserInterface
@@ -42,6 +40,15 @@ class BaseParserManagerAbstractFactory extends AbstractParserManagerAbstractFact
         }
 
         return $container->get($serviceConfig[static::KEY_PARSER]);
+    }
+
+    protected function getOptions(array $serviceConfig): array
+    {
+        if (!isset($serviceConfig[self::KEY_OPTIONS])) {
+            throw new InvalidArgumentException("Invalid option '" . self::KEY_OPTIONS . "'");
+        }
+
+        return $serviceConfig[self::KEY_OPTIONS];
     }
 
     protected function createParseResultDataStore(

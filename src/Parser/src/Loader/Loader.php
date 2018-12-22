@@ -17,6 +17,8 @@ use RuntimeException;
 
 class Loader implements LoaderInterface
 {
+    const DEF_MAX_ATTEMPTS = 10;
+
     protected $userAgentGenerator;
 
     protected $proxies;
@@ -55,7 +57,7 @@ class Loader implements LoaderInterface
      */
     public function load(string $uri): string
     {
-        $maxAttempts = $this->options['maxProxy'] ?? 10;
+        $maxAttempts = $this->options['maxProxy'] ?? self::DEF_MAX_ATTEMPTS;
         $attempt = 0;
 
         $response = $this->createClient()->request('GET', $uri);

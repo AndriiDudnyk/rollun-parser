@@ -14,9 +14,13 @@ use Parser\DataStore\TaskDataStore;
 use Parser\Loader\Loader;
 use Parser\Loader\LoaderFactory;
 use Parser\Manager\BaseParserManager;
-use Parser\Manager\Factory\BaseParserManagerAbstractFactory;
+use Parser\Manager\Factory\AbstractParserManagerFactory;
+use Parser\Manager\Factory\BaseParserManagerFactory;
 use Parser\Manager\Factory\LoaderManagerFactory;
+use Parser\Manager\Factory\SearchParserManagerFactory;
 use Parser\Manager\LoaderManager;
+use Parser\Manager\ProductParserManager;
+use Parser\Manager\SearchParserManager;
 use Parser\Parser\ProductParser;
 use Parser\Parser\SearchParser;
 use Parser\Parser\SellerParser;
@@ -57,10 +61,10 @@ class ConfigProvider
                     Loader::class => LoaderFactory::class,
                     LoaderManager::class => LoaderManagerFactory::class,
                     DocumentDataStore::class => DocumentDataStoreFactory::class,
+                    BaseParserManager::class => BaseParserManagerFactory::class,
+                    ProductParserManager::class => BaseParserManagerFactory::class,
+                    SearchParserManager::class => SearchParserManagerFactory::class,
                 ],
-                'abstract_factories' => [
-                    BaseParserManagerAbstractFactory::class
-                ]
             ],
             LoaderFactory::class => [
                 LoaderFactory::KEY_PROXY_DATASTORE => 'proxyDataStore',
@@ -84,26 +88,46 @@ class ConfigProvider
                 'parsers' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
-                        'parserProcess',
+//                        SearchParserManager::class,
+                        ProductParserManager::class
                     ]
                 ],
             ],
-            'parserManagers' => [
-                'simpleParserManager' => [
-                    'class' => BaseParserManager::class,
+            AbstractParserManagerFactory::KEY => [
+                SearchParserManager::class => [
                     'parser' => SearchParser::class,
                     'documentDataStore' => DocumentDataStore::class,
+                    'taskDataStore' => 'aspectTaskDataStore',
+                    'parseResultDataStore' => 'search_products',
+                    'options' => [
+                        'createProductParseTask' => 1,
+                        'productUri' => 'https://www.ebay.com/itm',
+                        'maxCorruptRecords' => 30,
+                        'saveCorruptedProducts' => 1,
+                    ],
+                ],
+                ProductParserManager::class => [
+                    'parser' => ProductParser::class,
+                    'documentDataStore' => DocumentDataStore::class,
                     'parseResultDataStore' => 'products',
-                ]
+                    'options' => [
+                        'maxCorruptRecords' => 30,
+                        'saveCorruptedProducts' => 1,
+                    ],
+                ],
             ],
             InterruptAbstractFactoryAbstract::KEY => [
                 'loaderProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => LoaderManager::class,
                 ],
-                'parserProcess' => [
+                'searchParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => 'simpleParserManager',
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => 'searchParserManager',
+                ],
+                'productParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => 'productParserManager',
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [
@@ -112,6 +136,12 @@ class ConfigProvider
                     'filename' => 'data/datastores/products.csv',
                     'delimiter' => ','
                 ],
+                'search_products' => [
+                    'class' => CsvBase::class,
+                    'filename' => 'data/datastores/search_products.csv',
+                    'delimiter' => ','
+                ],
+
                 'proxyDataStore' => [
                     'class' => CsvBase::class,
                     'filename' => 'data/datastores/proxies.csv',
