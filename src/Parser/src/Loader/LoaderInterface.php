@@ -9,10 +9,14 @@ namespace Parser\Loader;
 interface LoaderInterface
 {
     /**
-     * Load html from target
-     *
      * @param string $uri
      * @return string
      */
     public function load(string $uri): string;
+
+    /**
+     * @param array $options
+     * @return mixed
+     */
+    public function setOptions($options);
 }

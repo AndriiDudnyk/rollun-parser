@@ -13,4 +13,9 @@ interface ParserInterface
      * @return array
      */
     public function parse(string $html): array;
+
+    /**
+     * @return string
+     */
+    public function getName(): string;
 }

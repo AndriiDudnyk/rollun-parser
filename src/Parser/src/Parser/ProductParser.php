@@ -8,8 +8,10 @@ namespace Parser\Parser;
 
 use phpQuery as PhpQuery;
 
-class ProductParser implements ParserInterface
+class ProductParser extends AbstractParser
 {
+    public const PARSER_NAME = 'ebayProduct';
+
     /**
      * @param string $html
      * @return array|mixed

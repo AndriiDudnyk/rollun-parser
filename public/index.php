@@ -12,14 +12,12 @@ use Zend\Expressive\Application;
 use Zend\Expressive\MiddlewareFactory;
 use Zend\ServiceManager\ServiceManager;
 
-error_reporting(E_ALL ^ E_USER_DEPRECATED);
+error_reporting(E_ALL ^ E_DEPRECATED ^ E_USER_DEPRECATED);
 
 // Delegate static file requests back to the PHP built-in webserver
 if (PHP_SAPI === 'cli-server' && $_SERVER['SCRIPT_FILENAME'] !== __FILE__) {
     return false;
 }
-
-error_reporting(E_ALL ^ E_DEPRECATED ^ E_USER_DEPRECATED);
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';

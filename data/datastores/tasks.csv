@@ -1,0 +1,2 @@
+id,parser,uri,created_at,options,status
+1,ebaySearch,https://www.ebay.com/sch/i.html?_nkw=tusk&_sacat=6000&_sop=2&_ipg=200,1545496204,"{""maxAttempts"":10,""useProxy"":1,""fakeUserAgent"":1}",1

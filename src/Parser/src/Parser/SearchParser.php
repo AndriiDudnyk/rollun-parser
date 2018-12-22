@@ -8,8 +8,10 @@ namespace Parser\Parser;
 
 use phpQuery as PhpQuery;
 
-class SearchParser implements ParserInterface
+class SearchParser extends AbstractParser
 {
+    public const PARSER_NAME = 'ebaySearch';
+
     /**
      * @param string $html
      * @return array
@@ -20,34 +22,34 @@ class SearchParser implements ParserInterface
         $itemCards = $document->find('.s-item__wrapper');
         $product = [];
 
-        foreach ($itemCards as $itemCardKey => $itemCard) {
+        foreach ($itemCards as $key => $itemCard) {
             $pq = pq($itemCard);
 
-            $product['url'] = $pq->find('.s-item__link')->attr('href');
-            $thisItemUrlPath = parse_url($product['url'])['path'];
+            $product[$key]['url'] = $pq->find('.s-item__link')->attr('href');
+            $thisItemUrlPath = parse_url($product[$key]['url'])['path'];
 
-            $product['itemId'] = end(explode('/', $thisItemUrlPath));
-            $product['urlOfImg'] = $pq->find('.s-item__image-img')->attr('src');
-            $product['price'] = $pq->find('span.s-item__price')->text();
-            $product['shipping']['cost'] = $pq->find('.s-item__shipping')->text();
+            $product[$key]['item_id'] = end(explode('/', $thisItemUrlPath));
+            $product[$key]['img'] = $pq->find('.s-item__image-img')->attr('src');
+            $product[$key]['price'] = $pq->find('span.s-item__price')->text();
+            $product[$key]['shipping']['cost'] = $pq->find('.s-item__shipping')->text();
 
             // Filter trash
-            $product['shipping']['cost'] = str_replace(
+            $product[$key]['shipping']['cost'] = str_replace(
                 [' shipping', '+'],
                 '',
-                $product['shipping']['cost']
+                $product[$key]['shipping']['cost']
             );
 
-            $product['shipping'] = implode(' ', $product['shipping']);
+            $product[$key]['shipping'] = implode(' ', $product[$key]['shipping']);
 
             $hotnessText = $pq->find('.s-item__hotness>.NEGATIVE')->text();
 
             if (stristr($hotnessText, 'Watching')) {
-                $product['watching'] = $hotnessText;
+                $product[$key]['watching'] = $hotnessText;
             }
 
             if (stristr($hotnessText, 'Sold')) {
-                $product['sold'] = $hotnessText;
+                $product[$key]['sold'] = $hotnessText;
             }
         }
 

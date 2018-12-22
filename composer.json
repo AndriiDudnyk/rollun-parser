@@ -39,6 +39,7 @@
   "require": {
     "php": "^7.1",
     "psr/http-client": "^1.0",
+    "rollun-com/rollun-callback": "^5.0",
     "rollun-com/rollun-datastore": "^6",
     "rollun-com/rollun-logger": "^4.2",
     "rollun-com/rollun-permission": "^4.0.3",

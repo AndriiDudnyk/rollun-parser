@@ -14,7 +14,7 @@ use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
  * Interface HtmlReadRepository
  * @package Parser\Interfaces
  */
-interface HtmlDataStoreInterface extends DataStoresInterface
+interface DocumentDataStoreInterface extends DataStoresInterface
 {
 
 }

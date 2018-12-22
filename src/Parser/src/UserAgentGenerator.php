@@ -6,7 +6,7 @@
 
 namespace Parser;
 
-use Exception;
+use InvalidArgumentException;
 
 /**
  * Generate hundreds of thousands of unique mobile & desktop User Agents that are 100% authentic.
@@ -379,7 +379,6 @@ class UserAgentGenerator
     /**
      * @param null $os
      * @return string
-     * @throws Exception
      */
     public function generate($os = null)
     {
@@ -403,7 +402,7 @@ class UserAgentGenerator
                 return $this->createRandomMobileUserAgent($os);
         }
 
-        throw new Exception("Undefined os '$os'");
+        throw new InvalidArgumentException("Undefined os '$os'");
     }
 
     /**

@@ -6,8 +6,8 @@
 
 declare(strict_types = 1);
 
-use Parser\LoaderManager;
 use Psr\Container\ContainerInterface;
+use rollun\callback\Middleware\WebhookMiddleware;
 use rollun\datastore\Middleware\DataStoreApi;
 use rollun\permission\ConfigProvider;
 use rollun\permission\OAuth\LoginMiddleware;
@@ -16,6 +16,7 @@ use rollun\permission\OAuth\RedirectMiddleware;
 use rollun\permission\OAuth\RegisterMiddleware;
 use Zend\Expressive\Application;
 use Zend\Expressive\MiddlewareFactory;
+use Zend\Expressive\Router\Route;
 
 /**
  * Setup routes with a single request method:
@@ -80,9 +81,10 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
         DataStoreApi::class
     );
 
-    $app->get(
-        '/parse',
-        LoaderManager::class,
-        LoaderManager::class
+    $app->route(
+        '/api/webhook[/{resourceName}]',
+        WebhookMiddleware::class,
+        Route::HTTP_METHOD_ANY,
+        'webhook'
     );
 };

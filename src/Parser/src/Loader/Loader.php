@@ -6,88 +6,94 @@
 
 namespace Parser\Loader;
 
-use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Parser\ProxyManager;
 use Parser\UserAgentGenerator;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Log\LoggerInterface;
-use rollun\datastore\DataStore\DataStoreException;
+use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
+use rollun\datastore\Rql\RqlQuery;
+use RuntimeException;
 
 class Loader implements LoaderInterface
 {
     protected $userAgentGenerator;
 
-    protected $clientFactory;
+    protected $proxies;
 
-    protected $proxyManager;
-
-    protected $maxAttempts;
-
-    protected $logger;
+    protected $options;
 
     /**
      * Loader constructor.
      * @param UserAgentGenerator $userAgentGenerator
-     * @param ProxyManager $proxyManager
-     * @param callable $clientFactory
-     * @param LoggerInterface $logger
-     * @param int $maxAttempt
+     * @param DataStoresInterface $proxyDataStore
+     * @param array $options
      */
     public function __construct(
         UserAgentGenerator $userAgentGenerator,
-        ProxyManager $proxyManager,
-        callable $clientFactory,
-        LoggerInterface $logger,
-        $maxAttempt = 10
+        DataStoresInterface $proxyDataStore,
+        array $options = []
     ) {
         $this->userAgentGenerator = $userAgentGenerator;
-        $this->proxyManager = $proxyManager;
-        $this->clientFactory = $clientFactory;
-        $this->logger = $logger;
-        $this->maxAttempts = $maxAttempt;
+        $this->proxies = $proxyDataStore;
+        $this->setOptions($options);
+    }
+
+    public function setOptions($options, $override = true)
+    {
+        foreach ($options as $key => $option) {
+            if ($override || !isset($this->options[$key])) {
+                $this->options[$key] = $option;
+            }
+        }
     }
 
     /**
      * @param string $uri
      * @return string
      * @throws GuzzleException
-     * @throws DataStoreException
-     * @throws Exception
      */
     public function load(string $uri): string
     {
+        $maxAttempts = $this->options['maxProxy'] ?? 10;
         $attempt = 0;
-        $proxy = $this->proxyManager->getUnusedProxy();
-        $response = $this->createClient($proxy)->request('GET', $uri);
 
-        while ($this->validate($response) && $attempt < $this->maxAttempts) {
-            $proxy = $this->proxyManager->getUnusedProxy();
-            $this->proxyManager->setUsedProxy($proxy);
-            $response = $this->createClient($proxy)->request('GET', $uri);
+        $response = $this->createClient()->request('GET', $uri);
+
+        while (!$this->validate($response) && $attempt < $maxAttempts) {
+            $response = $this->createClient()->request('GET', $uri);
             $attempt++;
         }
 
         if (!$this->validate($response)) {
-            $this->logger->warning("Can't load html from '$uri'", [
-                'status' => $response->getStatusCode(),
-                'reasonPhrase' => $response->getReasonPhrase(),
-            ]);
+            throw new RuntimeException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
         }
 
         return $response->getBody()->getContents();
     }
 
-    /**
-     * @param $proxy
-     * @return Client
-     * @throws Exception
-     */
-    protected function createClient($proxy): Client
+    protected function generateProxy()
     {
-        return ($this->clientFactory)($proxy, ['User-Agent' => $this->userAgentGenerator->generate()]);
+        $proxy = $this->getUnusedProxy();
+        $this->setUsedProxy($proxy);
+
+        return $proxy;
+    }
+
+    /**
+     * @return Client
+     */
+    protected function createClient(): Client
+    {
+        $proxy = empty($this->options['usedProxy']) ? null : $this->generateProxy();
+        $userAgent = empty($this->options['fakeUserAgent']) ? null : $this->userAgentGenerator->generate();
+
+        return new Client([
+            'proxy' => $proxy,
+            'headers' => [
+                'User-Agent' => $userAgent
+            ],
+        ]);
     }
 
     /**
@@ -106,8 +112,31 @@ class Loader implements LoaderInterface
      * @param ResponseInterface $response
      * @return bool
      */
-    public function validate(ResponseInterface $response)
+    public function validate(ResponseInterface $response): bool
     {
-        return $response->getStatusCode() !== 200;
+        return $response->getStatusCode() === 200;
+    }
+
+    public function getUnusedProxy()
+    {
+        $proxies = $this->proxies->query(new RqlQuery('eqf(is_used)&limit(1)'));
+
+        if (!count($proxies)) {
+            throw new RuntimeException('Unused proxies run out');
+        }
+
+        $proxy = current($proxies);
+
+        return $proxy['uri'];
+    }
+
+    public function setUsedProxy(string $uri)
+    {
+        $proxies = $this->proxies->query(new RqlQuery("eq(uri,{$uri})&limit(1)"));
+        $proxy = current($proxies);
+        $this->proxies->update([
+            'id' => $proxy['id'],
+            'is_used' => 1,
+        ]);
     }
 }

@@ -8,8 +8,10 @@ namespace Parser\Parser;
 
 use phpQuery as PhpQuery;
 
-class SellerParser implements ParserInterface
+class SellerParser extends AbstractParser
 {
+    public const PARSER_NAME = 'ebaySeller';
+
     public function parse(string $html): array
     {
         $document = PhpQuery::newDocument($html);

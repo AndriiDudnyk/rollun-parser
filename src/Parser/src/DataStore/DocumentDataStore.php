@@ -9,24 +9,25 @@ namespace Parser\DataStore;
 use InvalidArgumentException;
 use rollun\datastore\DataStore\Aspect\AspectAbstract;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
+use Xiag\Rql\Parser\Query;
 
-class HtmlDataStore extends AspectAbstract implements HtmlDataStoreInterface
+class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInterface
 {
-    protected $dirPath;
+    protected $storeDir;
 
     /**
      * HtmlDataStore constructor.
      * @param DataStoresInterface $dataStore
-     * @param string $dirPath
+     * @param string $storeDir
      */
-    public function __construct(DataStoresInterface $dataStore, string $dirPath)
+    public function __construct(DataStoresInterface $dataStore, string $storeDir)
     {
-        if (!file_exists($dirPath)) {
-            throw new InvalidArgumentException("Directory '{$dirPath}' not found");
+        if (!file_exists($storeDir)) {
+            throw new InvalidArgumentException("Directory '{$storeDir}' not found");
         }
 
         parent::__construct($dataStore);
-        $this->dirPath = rtrim($dirPath, DIRECTORY_SEPARATOR);
+        $this->storeDir = rtrim($storeDir, DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -78,7 +79,7 @@ class HtmlDataStore extends AspectAbstract implements HtmlDataStoreInterface
     /**
      * @inheritdoc
      */
-    public function postQuery($result, $id)
+    public function postQuery($result, Query $query)
     {
         foreach ($result as $key => $record) {
             $result[$key] = $this->fileToHtml($record);
@@ -91,7 +92,7 @@ class HtmlDataStore extends AspectAbstract implements HtmlDataStoreInterface
     {
         if ($result['html']) {
             $fileName = md5($result['html']);
-            $filePath = $this->dirPath . DIRECTORY_SEPARATOR . $fileName . '.html';
+            $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
             file_put_contents($filePath, $result['html']);
         } else {
             $filePath = '';
