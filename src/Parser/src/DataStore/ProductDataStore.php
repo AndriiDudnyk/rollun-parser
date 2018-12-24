@@ -6,10 +6,10 @@
 
 namespace Parser\DataStore;
 
-class TaskDataStore extends JsonDecorator
+class ProductDataStore extends JsonDecorator
 {
-    protected function getJsonFields(): array
+    public function getJsonFields(): array
     {
-        return ['options'];
+        return ['specs', 'shipping', 'imgs'];
     }
 }

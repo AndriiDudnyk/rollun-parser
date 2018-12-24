@@ -8,13 +8,20 @@ namespace Parser\Parser;
 
 use phpQuery as PhpQuery;
 
+/**
+ *
+ * !!!! Unused
+ *
+ * Class SellerParser
+ * @package Parser\Parser
+ */
 class SellerParser extends AbstractParser
 {
     public const PARSER_NAME = 'ebaySeller';
 
-    public function parse(string $html): array
+    public function parse(string $data): array
     {
-        $document = PhpQuery::newDocument($html);
+        $document = PhpQuery::newDocument($data);
 
         $sellerUrl = $document->find('#mbgLink')->attr('href');
         $parts = parse_url($sellerUrl);

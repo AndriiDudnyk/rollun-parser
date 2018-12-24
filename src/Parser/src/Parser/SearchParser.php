@@ -13,46 +13,52 @@ class SearchParser extends AbstractParser
     public const PARSER_NAME = 'ebaySearch';
 
     /**
-     * @param string $html
+     * @param string $data
      * @return array
      */
-    public function parse(string $html): array
+    public function parse(string $data): array
     {
-        $document = PhpQuery::newDocument($html);
+        $document = PhpQuery::newDocument($data);
         $itemCards = $document->find('.s-item__wrapper');
-        $product = [];
+        $products = [];
 
         foreach ($itemCards as $key => $itemCard) {
             $pq = pq($itemCard);
 
-            $product[$key]['url'] = $pq->find('.s-item__link')->attr('href');
-            $thisItemUrlPath = parse_url($product[$key]['url'])['path'];
+            $products[$key]['url'] = $pq->find('.s-item__link')->attr('href');
+            $urlComponents = parse_url($products[$key]['url']);
+            $path = $urlComponents['path'];
+            $pathParts = explode('/', $path);
 
-            $product[$key]['item_id'] = end(explode('/', $thisItemUrlPath));
-            $product[$key]['img'] = $pq->find('.s-item__image-img')->attr('src');
-            $product[$key]['price'] = $pq->find('span.s-item__price')->text();
-            $product[$key]['shipping']['cost'] = $pq->find('.s-item__shipping')->text();
+            $products[$key]['item_id'] = end($pathParts);
+            $products[$key]['img'] = $pq->find('.s-item__image-img')->attr('src');
+            $products[$key]['price'] = $pq->find('span.s-item__price')->text();
+            $products[$key]['shipping']['cost'] = $pq->find('.s-item__shipping')->text();
 
             // Filter trash
-            $product[$key]['shipping']['cost'] = str_replace(
+            $products[$key]['shipping']['cost'] = str_replace(
                 [' shipping', '+'],
                 '',
-                $product[$key]['shipping']['cost']
+                $products[$key]['shipping']['cost']
             );
 
-            $product[$key]['shipping'] = implode(' ', $product[$key]['shipping']);
+            $products[$key]['shipping'] = implode(' ', $products[$key]['shipping']);
+
+            $sellerInfo = $pq->find('.s-item__seller-info-text')->text();
+            [,$sellerId,,,] = explode(' ', $sellerInfo);
+            $products[$key]['seller'] = $sellerId;
 
             $hotnessText = $pq->find('.s-item__hotness>.NEGATIVE')->text();
 
             if (stristr($hotnessText, 'Watching')) {
-                $product[$key]['watching'] = $hotnessText;
+                $products[$key]['watching'] = $hotnessText;
             }
 
             if (stristr($hotnessText, 'Sold')) {
-                $product[$key]['sold'] = $hotnessText;
+                $products[$key]['sold'] = $hotnessText;
             }
         }
 
-        return $product;
+        return $products;
     }
 }

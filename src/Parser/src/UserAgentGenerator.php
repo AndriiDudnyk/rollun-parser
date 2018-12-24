@@ -245,7 +245,7 @@ class UserAgentGenerator
         $telephone = strtolower($telephone);
         $systems = [];
         switch ($telephone) {
-            case'android':
+            case 'android':
                 $systems += $this->androidOS;
                 break;
             case 'iphone':

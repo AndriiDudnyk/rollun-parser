@@ -7,12 +7,16 @@
 namespace Parser\DataStore;
 
 use InvalidArgumentException;
-use rollun\datastore\DataStore\Aspect\AspectAbstract;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use Xiag\Rql\Parser\Query;
 
-class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInterface
+class DocumentDataStore extends JsonDecorator
 {
+    protected function getJsonFields(): array
+    {
+        return ['options'];
+    }
+
     protected $storeDir;
 
     /**
@@ -35,7 +39,9 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
      */
     public function preCreate($itemData, $rewriteIfExist = false)
     {
-        if (!isset($itemData['html'])) {
+        $itemData = $this->preProcessJsonFields($itemData);
+
+        if (!isset($itemData['document'])) {
             throw new InvalidArgumentException('Invalid incoming data');
         }
 
@@ -47,7 +53,9 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
      */
     public function preUpdate($itemData, $createIfAbsent = false)
     {
-        if (!isset($itemData['html'])) {
+        $itemData = $this->preProcessJsonFields($itemData);
+
+        if (!isset($itemData['document'])) {
             return $itemData;
         }
 
@@ -70,7 +78,9 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
      */
     public function postRead($result, $id)
     {
-        $result['html'] = file_get_contents($result['file']);
+        $result = $this->postProcessJsonFields($result);
+
+        $result['document'] = file_get_contents($result['file']);
         unset($result['file']);
 
         return $result;
@@ -81,6 +91,10 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
      */
     public function postQuery($result, Query $query)
     {
+        foreach ($result as $k => $record) {
+            $result[$k] = $this->postProcessJsonFields($record);
+        }
+
         foreach ($result as $key => $record) {
             $result[$key] = $this->fileToHtml($record);
         }
@@ -90,15 +104,15 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
 
     protected function htmlToFile($result)
     {
-        if ($result['html']) {
-            $fileName = md5($result['html']);
+        if ($result['document']) {
+            $fileName = md5($result['document']);
             $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
-            file_put_contents($filePath, $result['html']);
+            file_put_contents($filePath, $result['document']);
         } else {
             $filePath = '';
         }
 
-        unset($result['html']);
+        unset($result['document']);
         $result['file'] = $filePath;
 
         return $result;
@@ -107,9 +121,9 @@ class DocumentDataStore extends AspectAbstract implements DocumentDataStoreInter
     protected function fileToHtml($result)
     {
         if ($result['file']) {
-            $result['html'] = file_get_contents($result['file']);
+            $result['document'] = file_get_contents($result['file']);
         } else {
-            $result['html'] = '';
+            $result['document'] = '';
         }
 
         unset($result['file']);

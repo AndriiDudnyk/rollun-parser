@@ -6,9 +6,24 @@
 
 namespace Parser\Manager;
 
+use Parser\DataStore\DocumentDataStore;
+use Parser\DataStore\ProductDataStore;
+use Parser\Parser\ParserInterface;
+use Psr\Log\LoggerInterface;
+
 class ProductParserManager extends BaseParserManager
 {
     const DEF_MAX_CORRUPT_RECORDS = 30;
+
+    public function __construct(
+        ParserInterface $parser,
+        ProductDataStore $parseResultDataStore,
+        DocumentDataStore $documentDataStore,
+        array $options,
+        LoggerInterface $logger = null
+    ) {
+        parent::__construct($parser, $parseResultDataStore, $documentDataStore, $options);
+    }
 
     protected function processResult(array $records): ?array
     {
@@ -37,5 +52,10 @@ class ProductParserManager extends BaseParserManager
         }
 
         return $records;
+    }
+
+    protected function saveResult(array $records)
+    {
+        $this->parseResultDataStore->create($records);
     }
 }

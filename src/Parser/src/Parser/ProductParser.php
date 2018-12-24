@@ -13,36 +13,41 @@ class ProductParser extends AbstractParser
     public const PARSER_NAME = 'ebayProduct';
 
     /**
-     * @param string $html
+     * @param string $data
      * @return array|mixed
      */
-    public function parse(string $html): array
+    public function parse(string $data): array
     {
-        $document = PhpQuery::newDocument($html);
+        $document = PhpQuery::newDocument($data);
 
         $sellerUrl = $document->find('#mbgLink')->attr('href');
         $parts = parse_url($sellerUrl);
         parse_str($parts['query'], $sellerId);
 
-        $product['sellerId'] = $sellerId['_trksid'];
-        $product['title'] = $document->find('.it-ttl')->text();
-        $product['price'] = $document->find('#mm-saleDscPrc')->text();
-        $product['shipping']['cost'] = $document->find('#fshippingCost>span')->text();
-        $product['shipping']['service'] = $document->find('#fShippingSvc')->text();
+        $products['title'] = $document->find('.it-ttl')->text();
+
+        if ($document->find('#vi-cdown_timeLeft')->count()) {
+            $products['price'] = $document->find('#prcIsum_bidPrice')->text();
+        } else {
+            $products['price'] = $document->find('#prcIsum')->text();
+        }
+
+        $products['shipping']['cost'] = $document->find('#fshippingCost>span')->text();
+        $products['shipping']['service'] = $document->find('#fShippingSvc')->text();
 
         $catLine = $document->find('.vi-VR-brumb-hasNoPrdlnks li a span');
-        $product['category'] = '';
+        $products['category'] = '';
 
         foreach ($catLine as $cat) {
             $pq = pq($cat);
-            $product['category'] .= '>' . $pq->text();
+            $products['category'] .= '>' . $pq->text();
         }
 
         $itemImages = $document->find('#mainImgHldr>img');
 
         foreach ($itemImages as $img) {
             $pq = pq($img);
-            $product['imgUrl'][] = $pq->attr('src');
+            $products['imgs'][] = $pq->attr('src');
         }
 
         $itemSpecs = $document->find('.itemAttr tr');
@@ -51,15 +56,19 @@ class ProductParser extends AbstractParser
         foreach ($itemSpecs as $tr) {
             $pq = pq($tr);
             $key = count($specs);
-            $specs[$key]['specName'] = $pq->find('td')->eq(0)->text();
-            $specs[$key]['specDesc'] = $pq->find('td')->eq(1)->text();
 
-            $specs[++$key]['specName'] = $pq->find('td')->eq(2)->text();
-            $specs[++$key]['specDesc'] = $pq->find('td')->eq(3)->text();
+            $specs[$key]['name'] = trim(trim($pq->find('td')->eq(0)->text()), ':');
+            $specs[$key]['value'] = trim($pq->find('td')->eq(1)->text());
+
+            if ($pq->find('td')->eq(2)->count()) {
+                $key++;
+                $specs[$key]['name'] =  trim(trim($pq->find('td')->eq(2)->text()), ':');
+                $specs[$key]['value'] = trim($pq->find('td')->eq(3)->text());
+            }
         }
 
-        $product['spec'] = $specs;
+        $products['specs'] = $specs;
 
-        return $product;
+        return $products;
     }
 }

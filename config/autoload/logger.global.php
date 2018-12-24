@@ -27,31 +27,31 @@ return [
                 ],
             ],
             'writers' => [
-//                [
-//                    'name' => DbWriter::class,
-//                    'options' => [
-//                        'db' => 'db',
-//                        'table' => 'logs',
-//                        'column' => [
-//                            'id' => 'id',
-//                            'timestamp' => 'timestamp',
-//                            'message' => 'message',
-//                            'level' => 'level',
-//                            'priority' => 'priority',
-//                            'context' => 'context',
-//                            'lifecycle_token' => 'lifecycle_token',
-//                        ],
-//                        'formatter' => ContextToString::class,
-//                    ],
-//                ],
-
                 [
-                    'name' => Stream::class,
+                    'name' => DbWriter::class,
                     'options' => [
-                        'stream' => 'php://stdout',
+                        'db' => 'db',
+                        'table' => 'logs',
+                        'column' => [
+                            'id' => 'id',
+                            'timestamp' => 'timestamp',
+                            'message' => 'message',
+                            'level' => 'level',
+                            'priority' => 'priority',
+                            'context' => 'context',
+                            'lifecycle_token' => 'lifecycle_token',
+                        ],
                         'formatter' => ContextToString::class,
                     ],
                 ],
+
+//                [
+//                    'name' => Stream::class,
+//                    'options' => [
+//                        'stream' => 'php://stdout',
+//                        'formatter' => ContextToString::class,
+//                    ],
+//                ],
             ],
         ],
     ],

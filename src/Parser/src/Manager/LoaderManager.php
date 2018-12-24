@@ -6,7 +6,7 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStoreInterface;
+use Parser\DataStore\DocumentDataStore;
 use Parser\Loader\LoaderInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
@@ -31,14 +31,14 @@ class LoaderManager
      * LoaderManager constructor.
      * @param LoaderInterface $loader
      * @param DataStoresInterface $taskDataStore (!) should have to be able serialize itself
-     * @param DocumentDataStoreInterface $htmlDataStore (!) should have to be able serialize itself
+     * @param DocumentDataStore $htmlDataStore (!) should have to be able serialize itself
      * @param LoggerInterface|null $logger
      * @throws ReflectionException
      */
     public function __construct(
         LoaderInterface $loader,
         DataStoresInterface $taskDataStore,
-        DocumentDataStoreInterface $htmlDataStore,
+        DocumentDataStore $htmlDataStore,
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(["logger" => LoggerInterface::class]);
@@ -55,15 +55,16 @@ class LoaderManager
         }
 
         $this->logger->info("Loader start task #{$task['id']}");
-        $loader = clone $this->loader;
-        $loader->setOptions($task['options']);
 
         try {
-            $html = $loader->load($task['uri']) ?? '';
+            $document = $this->getLoader($task['options'])->load($task['uri']) ?? '';
             $this->htmlDataStore->create([
-                'html' => $html,
+                'document' => $document,
                 'parser' => $task['parser'],
                 'created_at' => time(),
+
+                // Options for parser come through loader manager options
+                'options' => $task['options'][BaseParserManager::KEY_OPTIONS] ?? [],
                 'status' => 0,
             ]);
             $this->taskDataStore->update([
@@ -76,6 +77,15 @@ class LoaderManager
                 'exception' => $t,
             ]);
         }
+    }
+
+    protected function getLoader($options): LoaderInterface
+    {
+        $loader = clone $this->loader;
+        unset($options[BaseParserManager::KEY_OPTIONS]);
+        $loader->setOptions($options);
+
+        return $loader;
     }
 
     protected function getTask(): ?array

@@ -6,7 +6,7 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStoreInterface;
+use Parser\DataStore\DocumentDataStore;
 use Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
@@ -14,8 +14,10 @@ use rollun\datastore\Rql\RqlQuery;
 use rollun\dic\InsideConstruct;
 use RuntimeException;
 
-class BaseParserManager
+abstract class BaseParserManager
 {
+    const KEY_OPTIONS = 'parserOptions';
+
     protected $parser;
 
     protected $parseResultDataStore;
@@ -32,7 +34,7 @@ class BaseParserManager
     public function __construct(
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
-        DocumentDataStoreInterface $documentDataStore,
+        DocumentDataStore $documentDataStore,
         array $options,
         LoggerInterface $logger = null
     ) {
@@ -43,6 +45,15 @@ class BaseParserManager
         $this->options = $options;
     }
 
+    public function setOptions($options, $override = true)
+    {
+        foreach ($options as $key => $option) {
+            if ($override || !isset($this->options[$key])) {
+                $this->options[$key] = $option;
+            }
+        }
+    }
+
     public function __invoke()
     {
         if (!$document = $this->getDocument($this->parser->getName())) {
@@ -50,20 +61,24 @@ class BaseParserManager
             return;
         }
 
+        $this->setOptions($document['options']);
+
         try {
-            $records = $this->parser->parse($document['html']);
+            $records = $this->parser->parse($document['document']);
             $this->documentDataStore->update([
                 'id' => $document['id'],
                 'status' => 1,
             ]);
-            $this->logger->info("Parser successfully finish parsing document #{$document['id']}");
-            $records = $this->processResult($records);
 
-            if ($records) {
-                $this->saveResult($records);
+            if (!$records) {
+                $this->logger->warning("Parser did not parse any data from document #{$document['id']}");
+                return;
             }
+
+            $records = $this->processResult($records);
+            $this->saveResult($records);
         } catch (\Throwable $t) {
-            $this->logger->info("Parser failed parsing document #{$document['id']}", [
+            $this->logger->warning("Parser failed parsing document #{$document['id']}", [
                 'exception' => $t,
             ]);
         }
@@ -74,12 +89,7 @@ class BaseParserManager
         return $records;
     }
 
-    protected function saveResult(array $records)
-    {
-        foreach ($records as $record) {
-            $this->parseResultDataStore->create($record);
-        }
-    }
+    abstract protected function saveResult(array $records);
 
     protected function getDocument($parser): ?array
     {

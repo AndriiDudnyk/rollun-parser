@@ -15,8 +15,11 @@ class SearchParserManagerFactory extends BaseParserManagerFactory
 {
     const KEY_TASK_DATASTORE = 'taskDataStore';
 
-    protected function createParserManager(ContainerInterface $container, array $serviceConfig): BaseParserManager
-    {
+    protected function createParserManager(
+        ContainerInterface $container,
+        array $serviceConfig,
+        $class
+    ): BaseParserManager {
         $parser = $this->createParser($container, $serviceConfig);
         $parseResultDataStore = $this->createParseResultDataStore($container, $serviceConfig);
         $documentDataStore = $this->createDocumentDataStore($container, $serviceConfig);

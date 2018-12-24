@@ -9,10 +9,10 @@ namespace Parser\Parser;
 interface ParserInterface
 {
     /**
-     * @param string $html
+     * @param string $data
      * @return array
      */
-    public function parse(string $html): array;
+    public function parse(string $data): array;
 
     /**
      * @return string

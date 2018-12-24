@@ -6,7 +6,8 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStoreInterface;
+use Parser\DataStore\DocumentDataStore;
+use Parser\Parser\CompatibleParser;
 use Parser\Parser\ParserInterface;
 use Parser\Parser\ProductParser;
 use Psr\Log\LoggerInterface;
@@ -21,12 +22,12 @@ class SearchParserManager extends BaseParserManager
     public function __construct(
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
-        DocumentDataStoreInterface $documentDataStore,
+        DocumentDataStore $documentDataStore,
         DataStoresInterface $taskDataStore,
         array $options,
         LoggerInterface $logger = null
     ) {
-        parent::__construct($parser, $parseResultDataStore, $documentDataStore, $options, $logger);
+        parent::__construct($parser, $parseResultDataStore, $documentDataStore, $options);
         $this->taskDataStore = $taskDataStore;
     }
 
@@ -45,7 +46,7 @@ class SearchParserManager extends BaseParserManager
             if (!isset($record['item_id']) || !isset($record['url'])) {
                 $maxCorruptRecords++;
                 $this->logger->warning('Corrupted item found', [
-                    'record' => $record
+                    'record' => $record,
                 ]);
 
                 if ($this->options['saveCorruptedProducts']) {
@@ -59,27 +60,59 @@ class SearchParserManager extends BaseParserManager
                 continue;
             }
 
-            $itemId = $record['item_id'];
-            $productUri = rtrim($this->options['productUri'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $itemId;
-
-            $this->taskDataStore->create([
-                'parser' => ProductParser::PARSER_NAME,
-                'uri' => $productUri,
-                'created_at' => time(),
-                'options' => [
-                    'useProxy' => 1,
-                    'fakeUserAgent' => 1
-                ],
-                'status' => 0
-            ]);
+            $this->createNewTasks($record['item_id']);
         }
 
         return $records;
     }
 
+    protected function createNewTasks($itemId)
+    {
+        $productUri = rtrim($this->options['productUri'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $itemId;
+
+        $this->taskDataStore->create([
+            'parser' => ProductParser::PARSER_NAME,
+            'uri' => $productUri,
+            'created_at' => time(),
+            'options' => [
+                'useProxy' => 1,
+                'fakeUserAgent' => 1,
+            ],
+            'status' => 0,
+        ]);
+
+        $compatibleUri = rtrim($this->options['compatibleUri']) . $itemId;
+        $this->taskDataStore->create([
+            'parser' => CompatibleParser::PARSER_NAME,
+            'uri' => $compatibleUri,
+            'created_at' => time(),
+            'options' => [
+                'useProxy' => 1,
+                'fakeUserAgent' => 1,
+                self::KEY_OPTIONS => [
+                    'productId' => $itemId
+                ]
+            ],
+            'status' => 0,
+        ]);
+    }
+
     public function __sleep()
     {
         $properties = parent::__sleep();
+
         return array_merge($properties, ['options', 'taskDataStore']);
+    }
+
+    public function __wakeup()
+    {
+        parent::__wakeup();
+    }
+
+    protected function saveResult(array $records)
+    {
+        foreach ($records as $record) {
+            $this->parseResultDataStore->create($record);
+        }
     }
 }
