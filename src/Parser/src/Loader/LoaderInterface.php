@@ -6,11 +6,17 @@
 
 namespace Parser\Loader;
 
-interface LoaderInterface
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use RuntimeException;
+
+interface LoaderInterface extends ClientInterface
 {
     /**
      * @param string $uri
      * @return string
+     * @throws ClientExceptionInterface
+     * @throws RuntimeException
      */
     public function load(string $uri): string;
 

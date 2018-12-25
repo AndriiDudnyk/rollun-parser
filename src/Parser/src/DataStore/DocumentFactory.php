@@ -9,7 +9,7 @@ namespace Parser\DataStore;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 
-class DocumentDataStoreFactory
+class DocumentFactory
 {
     const KEY_DOWNLOAD_DATASTORE = 'downloadDataStore';
 
@@ -30,6 +30,6 @@ class DocumentDataStoreFactory
         $storeDir = $serviceConfig[self::KEY_STORE_DIR];
         $downloadDataStore = $container->get($serviceConfig[self::KEY_DOWNLOAD_DATASTORE]);
 
-        return new DocumentDataStore($downloadDataStore, $storeDir);
+        return new Document($downloadDataStore, $storeDir);
     }
 }

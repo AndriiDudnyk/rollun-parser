@@ -8,11 +8,11 @@ namespace Parser\Loader;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Parser\UserAgentGenerator;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use rollun\datastore\Rql\RqlQuery;
@@ -23,13 +23,26 @@ use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 
 class Loader implements LoaderInterface
 {
-    const DEF_MAX_ATTEMPTS = 10;
+    const DEF_MAX_ATTEMPTS = 1;
+    const DEF_USER_AGENT_OS = 'linux';
+
+    // Options
+    const MAX_ATTEMPTS_OPTION = 'maxAttempts'; // int
+    const USE_PROXY_OPTION = 'useProxy'; // bool
+    const FAKE_USER_AGENT_OPTION = 'fakeUserAgent'; // bool
+    const FAKE_USER_OS_OPTION = 'fakeUserAgentOS'; // 'linux' or 'windows' or 'mac'
+    const COOKIES_OPTION = 'cookies'; // array
+    const COOKIE_DOMAIN_OPTION = 'cookieDomain'; // string
+    const ALLOW_REDIRECT_OPTION = 'allowRedirect'; // bool
+    const CONNECTION_TIMEOUT_OPTION = 'connectionTimeout'; // int
 
     protected $userAgentGenerator;
 
     protected $proxies;
 
     protected $options;
+
+    protected $requestFactory;
 
     /**
      * @var LoggerInterface
@@ -40,6 +53,7 @@ class Loader implements LoaderInterface
      * Loader constructor.
      * @param UserAgentGenerator $userAgentGenerator
      * @param DataStoresInterface $proxyDataStore
+     * @param ServerRequestFactoryInterface $requestFactory
      * @param array $options
      * @param LoggerInterface|null $logger
      * @throws \ReflectionException
@@ -47,13 +61,16 @@ class Loader implements LoaderInterface
     public function __construct(
         UserAgentGenerator $userAgentGenerator,
         DataStoresInterface $proxyDataStore,
+        ServerRequestFactoryInterface $requestFactory,
         array $options = [],
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
+
         $this->userAgentGenerator = $userAgentGenerator;
         $this->proxies = $proxyDataStore;
         $this->setOptions($options);
+        $this->requestFactory = $requestFactory;
     }
 
     public function setOptions($options, $override = true)
@@ -68,21 +85,42 @@ class Loader implements LoaderInterface
     /**
      * @param string $uri
      * @return string
-     * @throws GuzzleException
+     * @throws ClientException
      */
     public function load(string $uri): string
     {
-        $maxAttempts = $this->options['maxProxy'] ?? self::DEF_MAX_ATTEMPTS;
+        $request = $this->requestFactory->createServerRequest('GET', $uri);
+        $response = $this->sendRequest($request);
+
+        if ($response->getStatusCode() != 200) {
+            throw new RuntimeException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
+        }
+
+        return $response->getBody()->getContents();
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws ClientException
+     */
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $uri = $request->getUri()->__toString();
+        $method = $request->getMethod();
+
+        $useProxy = $this->options[self::USE_PROXY_OPTION] ?? false;
+        $maxAttempts = $this->options[self::MAX_ATTEMPTS_OPTION] ?? self::DEF_MAX_ATTEMPTS;
         $attempt = 0;
 
-        if (!empty($this->options['useProxy'])) {
+        if ($useProxy) {
             $proxy = $this->getUnusedProxy();
         } else {
             $proxy = null;
         }
 
         try {
-            $response = $this->createClient($proxy)->request('GET', $uri);
+            $response = $this->createClient($proxy)->request($method, $uri);
         } catch (RequestException $e) {
             $this->logger->debug('Failed to fetch request', [
                 'exception' => $e
@@ -90,8 +128,8 @@ class Loader implements LoaderInterface
             $response = $e->getResponse();
         }
 
-        while (!$this->validate($response) && $attempt < $maxAttempts) {
-            if (!empty($this->options['useProxy'])) {
+        while (!$response && $attempt < $maxAttempts) {
+            if ($useProxy) {
                 $this->setUsedProxy($proxy);
                 $proxy = $this->getUnusedProxy();
             } else {
@@ -99,7 +137,7 @@ class Loader implements LoaderInterface
             }
 
             try {
-                $response = $this->createClient($proxy)->request('GET', $uri);
+                $response = $this->createClient($proxy)->request($method, $uri);
             } catch (RequestException $e) {
                 $this->logger->debug('Failed to fetch request', [
                     'exception' => $e
@@ -110,11 +148,11 @@ class Loader implements LoaderInterface
             $attempt++;
         }
 
-        if (!$this->validate($response)) {
-            throw new RuntimeException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
+        if (!$response) {
+            throw new ClientException("Can't fetch response", $request);
         }
 
-        return $response->getBody()->getContents();
+        return $response;
     }
 
     /**
@@ -123,26 +161,32 @@ class Loader implements LoaderInterface
      */
     protected function createClient($proxy = null): Client
     {
-        if (!empty($this->options['fakeUserAgent'])) {
-            $userAgent = $this->userAgentGenerator->generate($this->options['fakeUserOS'] ?? null);
-        } else {
-            $userAgent = null;
-        }
+        $options = [];
 
-        if ($userAgent) {
+        if (!empty($this->options[self::FAKE_USER_AGENT_OPTION])) {
+            $userAgent = $this->userAgentGenerator->generate(
+                $this->options[self::FAKE_USER_OS_OPTION] ?? self::DEF_USER_AGENT_OS
+            );
             $options['headers']['User-Agent'] = $userAgent;
         }
 
-        if (!empty($this->options['cookies'])) {
-            $domain = $this->options['cookie_domain'] ?? null;
-            $options['cookies'] = CookieJar::fromArray($this->options['cookies'], $domain);
+        $cookies = $this->options[self::COOKIES_OPTION] ?? [];
+        if ($cookies) {
+            $domain = $this->options[self::COOKIE_DOMAIN_OPTION] ?? null;
+            $options['cookies'] = CookieJar::fromArray($cookies, $domain);
         }
 
         if ($proxy) {
             $options['proxy'] = $proxy;
         }
 
-        $options['allow_redirects'] = true;
+        if (isset($this->options[self::ALLOW_REDIRECT_OPTION])) {
+            $options['allow_redirects'] = true;
+        }
+
+        if (isset($this->options[self::CONNECTION_TIMEOUT_OPTION])) {
+            $options['connect_timeout'] = $this->options[self::CONNECTION_TIMEOUT_OPTION];
+        }
 
         return new Client($options);
     }
@@ -157,15 +201,6 @@ class Loader implements LoaderInterface
         $path = ltrim($uri->getPath(), '/');
 
         return "{$uri->getScheme()}://{$uri->getHost()}:{$uri->getPort()}/{$path}";
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @return bool
-     */
-    public function validate(ResponseInterface $response = null): bool
-    {
-        return isset($response) && $response->getStatusCode() === 200;
     }
 
     public function getUnusedProxy()
@@ -197,7 +232,7 @@ class Loader implements LoaderInterface
 
     public function __sleep()
     {
-        return ['proxies', 'options', 'userAgentGenerator'];
+        return ['proxies', 'options', 'userAgentGenerator', 'requestFactory'];
     }
 
     public function __wakeup()

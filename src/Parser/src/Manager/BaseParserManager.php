@@ -6,7 +6,7 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStore;
+use Parser\DataStore\Document;
 use Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
@@ -34,7 +34,7 @@ abstract class BaseParserManager
     public function __construct(
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
-        DocumentDataStore $documentDataStore,
+        Document $documentDataStore,
         array $options,
         LoggerInterface $logger = null
     ) {

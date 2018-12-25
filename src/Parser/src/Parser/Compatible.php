@@ -6,7 +6,7 @@
 
 namespace Parser\Parser;
 
-class CompatibleParser extends AbstractParser
+class Compatible extends AbstractParser
 {
     public const PARSER_NAME = 'ebayCompatible';
 

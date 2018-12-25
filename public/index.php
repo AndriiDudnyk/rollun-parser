@@ -6,6 +6,7 @@
 
 declare(strict_types = 1);
 
+use Parser\DataStore\SearchTask;
 use rollun\dic\InsideConstruct;
 use rollun\logger\LifeCycleToken;
 use Zend\Expressive\Application;

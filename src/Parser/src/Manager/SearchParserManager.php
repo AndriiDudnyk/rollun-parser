@@ -6,10 +6,10 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStore;
-use Parser\Parser\CompatibleParser;
+use Parser\DataStore\Document;
+use Parser\Parser\Compatible;
 use Parser\Parser\ParserInterface;
-use Parser\Parser\ProductParser;
+use Parser\Parser\Product;
 use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 
@@ -22,7 +22,7 @@ class SearchParserManager extends BaseParserManager
     public function __construct(
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
-        DocumentDataStore $documentDataStore,
+        Document $documentDataStore,
         DataStoresInterface $taskDataStore,
         array $options,
         LoggerInterface $logger = null
@@ -71,7 +71,7 @@ class SearchParserManager extends BaseParserManager
         $productUri = rtrim($this->options['productUri'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $itemId;
 
         $this->taskDataStore->create([
-            'parser' => ProductParser::PARSER_NAME,
+            'parser' => Product::PARSER_NAME,
             'uri' => $productUri,
             'created_at' => time(),
             'options' => [
@@ -83,7 +83,7 @@ class SearchParserManager extends BaseParserManager
 
         $compatibleUri = rtrim($this->options['compatibleUri']) . $itemId;
         $this->taskDataStore->create([
-            'parser' => CompatibleParser::PARSER_NAME,
+            'parser' => Compatible::PARSER_NAME,
             'uri' => $compatibleUri,
             'created_at' => time(),
             'options' => [

@@ -10,7 +10,7 @@ use InvalidArgumentException;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use Xiag\Rql\Parser\Query;
 
-class DocumentDataStore extends JsonDecorator
+class Document extends JsonDecorator
 {
     protected function getJsonFields(): array
     {

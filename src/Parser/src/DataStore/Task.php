@@ -6,7 +6,7 @@
 
 namespace Parser\DataStore;
 
-class TaskDataStore extends JsonDecorator
+class Task extends JsonDecorator
 {
     protected function getJsonFields(): array
     {

@@ -6,7 +6,7 @@
 
 namespace Parser\DataStore;
 
-class ProductDataStore extends JsonDecorator
+class Product extends JsonDecorator
 {
     public function getJsonFields(): array
     {

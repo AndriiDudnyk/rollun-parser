@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2199b92cf7c1b37106488e4d174b95a6",
+    "content-hash": "e0a109999b72c2cd57896efe2f124632",
     "packages": [
         {
             "name": "avz-cmf/zend-psr3-log",
@@ -7038,7 +7038,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.1"
+        "php": "^7.1",
+        "ext-json": "*"
     },
     "platform-dev": []
 }

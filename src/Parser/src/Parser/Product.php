@@ -8,7 +8,7 @@ namespace Parser\Parser;
 
 use phpQuery as PhpQuery;
 
-class ProductParser extends AbstractParser
+class Product extends AbstractParser
 {
     public const PARSER_NAME = 'ebayProduct';
 

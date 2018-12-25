@@ -6,13 +6,15 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStore;
+use Parser\DataStore\Document;
 use Parser\Loader\LoaderInterface;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use rollun\datastore\Rql\RqlQuery;
 use rollun\dic\InsideConstruct;
+use RuntimeException;
 
 class LoaderManager
 {
@@ -31,14 +33,14 @@ class LoaderManager
      * LoaderManager constructor.
      * @param LoaderInterface $loader
      * @param DataStoresInterface $taskDataStore (!) should have to be able serialize itself
-     * @param DocumentDataStore $htmlDataStore (!) should have to be able serialize itself
+     * @param Document $htmlDataStore (!) should have to be able serialize itself
      * @param LoggerInterface|null $logger
      * @throws ReflectionException
      */
     public function __construct(
         LoaderInterface $loader,
         DataStoresInterface $taskDataStore,
-        DocumentDataStore $htmlDataStore,
+        Document $htmlDataStore,
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(["logger" => LoggerInterface::class]);
@@ -57,7 +59,8 @@ class LoaderManager
         $this->logger->info("Loader start task #{$task['id']}");
 
         try {
-            $document = $this->getLoader($task['options'])->load($task['uri']) ?? '';
+            $loader = $this->getLoader($task['options']);
+            $document = $loader->load($task['uri']) ?? '';
             $this->htmlDataStore->create([
                 'document' => $document,
                 'parser' => $task['parser'],
@@ -72,9 +75,9 @@ class LoaderManager
                 'status' => 1,
             ]);
             $this->logger->info("Loader successfully finish task #{$task['id']}");
-        } catch (\Throwable $t) {
+        } catch (RuntimeException | ClientExceptionInterface $clientExc) {
             $this->logger->info("Loader failed task #{$task['id']}", [
-                'exception' => $t,
+                'exception' => $clientExc,
             ]);
         }
     }

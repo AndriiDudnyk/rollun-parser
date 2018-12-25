@@ -8,7 +8,7 @@ namespace Parser\Manager\Factory;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
-use Parser\DataStore\DocumentDataStore;
+use Parser\DataStore\Document;
 use Parser\Manager\BaseParserManager;
 use Parser\Parser\ParserInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
@@ -68,7 +68,7 @@ class BaseParserManagerFactory extends AbstractParserManagerFactory
     protected function createDocumentDataStore(
         ContainerInterface $container,
         array $serviceConfig
-    ): DocumentDataStore {
+    ): Document {
         if (!isset($serviceConfig[static::KEY_DOCUMENT_DATASTORE])) {
             throw new InvalidArgumentException("Invalid option '" . self::KEY_DOCUMENT_DATASTORE . "'");
         }

@@ -6,8 +6,8 @@
 
 namespace Parser\Manager;
 
-use Parser\DataStore\DocumentDataStore;
-use Parser\DataStore\ProductDataStore;
+use Parser\DataStore\Document;
+use Parser\DataStore\Product;
 use Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 
@@ -17,8 +17,8 @@ class ProductParserManager extends BaseParserManager
 
     public function __construct(
         ParserInterface $parser,
-        ProductDataStore $parseResultDataStore,
-        DocumentDataStore $documentDataStore,
+        Product $parseResultDataStore,
+        Document $documentDataStore,
         array $options,
         LoggerInterface $logger = null
     ) {
