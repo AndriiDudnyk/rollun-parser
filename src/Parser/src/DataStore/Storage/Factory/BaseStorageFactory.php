@@ -4,13 +4,13 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser\Factory;
+namespace Parser\DataStore\Storage\Factory;
 
 use InvalidArgumentException;
-use Parser\DataStore\Parser\BaseStorage;
-use Parser\DataStore\Parser\ParserStorageInterface;
+use Parser\DataStore\Storage\BaseStorage;
+use Parser\DataStore\Storage\StorageInterface;
 use Parser\Loader\LoaderInterface;
-use Parser\Manager\BaseParserManager;
+use Parser\Manager\Parser\BaseManager;
 use Parser\Parser\ParserInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,9 +24,9 @@ class BaseStorageFactory extends AbstractStorageFactory
      * @param ContainerInterface $container
      * @param $serviceConfig
      * @param $class
-     * @return ParserStorageInterface
+     * @return StorageInterface
      */
-    public function createParserStorage(ContainerInterface $container, $serviceConfig, $class): ParserStorageInterface
+    public function createParserStorage(ContainerInterface $container, $serviceConfig, $class): StorageInterface
     {
         $loader = $this->getLoader($container, $serviceConfig);
         $parser = $this->getParser($container, $serviceConfig);
@@ -39,7 +39,7 @@ class BaseStorageFactory extends AbstractStorageFactory
         if (!is_a($class, BaseStorage::class, true)) {
             throw new InvalidArgumentException(sprintf(
                 'Expected class %, given %s',
-                BaseParserManager::class,
+                BaseManager::class,
                 is_object($class) ? get_class($class) : gettype($class)
             ));
         }

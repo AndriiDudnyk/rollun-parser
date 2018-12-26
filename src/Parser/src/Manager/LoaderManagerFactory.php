@@ -4,11 +4,10 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager\Factory;
+namespace Parser\Manager;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
-use Parser\Manager\LoaderManager;
 
 class LoaderManagerFactory
 {

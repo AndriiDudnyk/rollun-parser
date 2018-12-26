@@ -4,20 +4,20 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager;
+namespace Parser\Manager\Parser;
 
 use Parser\DataStore\Document;
-use Parser\DataStore\Product;
+use Parser\DataStore\Product as ProductDataStore;
 use Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 
-class ProductParserManager extends BaseParserManager
+class Product extends BaseManager
 {
     const DEF_MAX_CORRUPT_RECORDS = 30;
 
     public function __construct(
         ParserInterface $parser,
-        Product $parseResultDataStore,
+        ProductDataStore $parseResultDataStore,
         Document $documentDataStore,
         array $options,
         LoggerInterface $logger = null

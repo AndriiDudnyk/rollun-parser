@@ -4,23 +4,23 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager;
+namespace Parser\Manager\Parser;
 
 use Parser\DataStore\Document;
-use Parser\DataStore\Proxy;
+use Parser\DataStore\Proxy as ProxyDataStore;
 use Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 
-class ProxyParserManager extends BaseParserManager
+class Proxy extends BaseManager
 {
     /**
-     * @var Proxy
+     * @var ProxyDataStore
      */
     protected $parseResultDataStore;
 
     public function __construct(
         ParserInterface $parser,
-        Proxy $proxyDataStore,
+        ProxyDataStore $proxyDataStore,
         Document $documentDataStore,
         array $options,
         LoggerInterface $logger = null

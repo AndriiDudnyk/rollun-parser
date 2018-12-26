@@ -4,18 +4,19 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager;
+namespace Parser\Manager\Parser\Search;
 
 use Parser\DataStore\Document;
 use Parser\DataStore\Task;
 use Parser\Loader\Loader;
+use Parser\Manager\Parser\BaseManager;
 use Parser\Parser\Compatible;
 use Parser\Parser\ParserInterface;
 use Parser\Parser\Product;
 use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 
-class SearchParserManager extends BaseParserManager
+class Simple extends BaseManager
 {
     const DEF_MAX_CORRUPT_RECORDS = 30;
 

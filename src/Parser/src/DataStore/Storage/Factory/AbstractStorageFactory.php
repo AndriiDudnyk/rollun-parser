@@ -4,10 +4,10 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser\Factory;
+namespace Parser\DataStore\Storage\Factory;
 
 use InvalidArgumentException;
-use Parser\DataStore\Parser\ParserStorageInterface;
+use Parser\DataStore\Storage\StorageInterface;
 use Psr\Container\ContainerInterface;
 
 abstract class AbstractStorageFactory
@@ -17,7 +17,7 @@ abstract class AbstractStorageFactory
     /**
      * @param ContainerInterface $container
      * @param string $class
-     * @return ParserStorageInterface
+     * @return StorageInterface
      */
     public function __invoke(ContainerInterface $container, $class)
     {
@@ -39,5 +39,5 @@ abstract class AbstractStorageFactory
         ContainerInterface $container,
         $serviceConfig,
         $class
-    ): ParserStorageInterface;
+    ): StorageInterface;
 }

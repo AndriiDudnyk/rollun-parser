@@ -4,11 +4,11 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager\Factory;
+namespace Parser\Manager\Parser\Factory;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
-use Parser\Manager\BaseParserManager;
+use Parser\Manager\Parser\BaseManager;
 
 abstract class AbstractParserManagerFactory
 {
@@ -28,7 +28,7 @@ abstract class AbstractParserManagerFactory
         ContainerInterface $container,
         array $serviceConfig,
         $requestedName
-    ): BaseParserManager;
+    ): BaseManager;
 
     protected function getServiceConfig(ContainerInterface $container, $requestedName)
     {
@@ -45,11 +45,11 @@ abstract class AbstractParserManagerFactory
             $class = $requestedName;
         }
 
-        if (!is_a($class, BaseParserManager::class, true)) {
+        if (!is_a($class, BaseManager::class, true)) {
             throw new InvalidArgumentException(
                 sprintf(
                     'Expected class %, given %s',
-                    BaseParserManager::class,
+                    BaseManager::class,
                     is_object($class) ? get_class($class) : gettype($class)
                 )
             );

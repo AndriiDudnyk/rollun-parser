@@ -4,12 +4,12 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager\Factory;
+namespace Parser\Manager\Parser\Factory;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
-use Parser\Manager\BaseParserManager;
-use Parser\Manager\SearchParserManager;
+use Parser\Manager\Parser\BaseManager;
+use Parser\Manager\Parser\Search\Simple;
 
 class SearchParserManagerFactory extends BaseParserManagerFactory
 {
@@ -19,7 +19,7 @@ class SearchParserManagerFactory extends BaseParserManagerFactory
         ContainerInterface $container,
         array $serviceConfig,
         $class
-    ): BaseParserManager {
+    ): BaseManager {
         $parser = $this->createParser($container, $serviceConfig);
         $parseResultDataStore = $this->createParseResultDataStore($container, $serviceConfig);
         $documentDataStore = $this->createDocumentDataStore($container, $serviceConfig);
@@ -31,6 +31,6 @@ class SearchParserManagerFactory extends BaseParserManagerFactory
         $taskDataStore = $container->get($serviceConfig[static::KEY_TASK_DATASTORE]);
         $options = $this->getOptions($serviceConfig);
 
-        return new SearchParserManager($parser, $parseResultDataStore, $documentDataStore, $taskDataStore, $options);
+        return new Simple($parser, $parseResultDataStore, $documentDataStore, $taskDataStore, $options);
     }
 }

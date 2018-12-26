@@ -4,11 +4,11 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser;
+namespace Parser\DataStore\Storage;
 
 use Zend\ServiceManager\AbstractPluginManager;
 
 class StoragePluginManager extends AbstractPluginManager
 {
-    protected $instanceOf = ParserStorageInterface::class;
+    protected $instanceOf = StorageInterface::class;
 }

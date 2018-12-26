@@ -9,47 +9,61 @@ declare(strict_types = 1);
 namespace Parser;
 
 use Parser\DataStore\Factory\ProxyFactory as ProxyDataStoreFactory;
-use Parser\DataStore\Factory\SearchTaskFactory;
-use Parser\DataStore\Factory\DocumentFactory;
-use Parser\DataStore\Parser\Factory\AbstractStorageFactory;
-use Parser\DataStore\Parser\Factory\BaseStorageFactory;
-use Parser\DataStore\Parser\Factory\SearchStorageFactory;
-use Parser\DataStore\Parser\Factory\StoragePluginManagerFactory;
-use Parser\DataStore\Parser\Product as ProductStorage;
-use Parser\DataStore\Parser\Search as SearchStorage;
-use Parser\DataStore\Parser\Compatible as CompatibleStorage;
-use Parser\DataStore\Parser\StorageDetector;
-use Parser\DataStore\Parser\StorageDetectorFactory;
-use Parser\DataStore\Parser\StoragePluginManager;
+use Parser\DataStore\Factory\SearchTaskFactory as SearchTaskDataStoreFactory;
+use Parser\DataStore\Factory\DocumentFactory as DocumentDataStoreFactory;
+
+
+// DataStores
 use Parser\DataStore\Document as DocumentDataStore;
 use Parser\DataStore\Product as ProductDataStore;
 use Parser\DataStore\SearchTask as SearchTaskDataStore;
 use Parser\DataStore\Task as TaskDataStore;
 use Parser\DataStore\Proxy as ProxyDataStore;
+
+// Storage (extends DataStore)
+use Parser\DataStore\Storage\Factory\AbstractStorageFactory;
+use Parser\DataStore\Storage\Factory\BaseStorageFactory;
+use Parser\DataStore\Storage\Factory\SearchFactory as SearchStorageFactory;
+use Parser\DataStore\Storage\Factory\StoragePluginManagerFactory;
+use Parser\DataStore\Storage\Product as ProductStorage;
+use Parser\DataStore\Storage\Search as SearchStorage;
+use Parser\DataStore\Storage\Compatible as CompatibleStorage;
+use Parser\DataStore\Storage\StorageDetector;
+use Parser\DataStore\Storage\StorageDetectorFactory;
+use Parser\DataStore\Storage\StoragePluginManager;
+
+// Loader
 use Parser\Loader\SearchLoaderHelper;
 use Parser\Loader\SearchLoaderHelperFactory;
-use Parser\Manager\ProxyParserManager;
-use Parser\Parser\Compatible as CompatibleParser;
-use Parser\Parser\Product as ProductParser;
-use Parser\Parser\Search as SearchParser;
-use Parser\Parser\Proxy as ProxyParser;
 use Parser\Loader\Loader;
 use Parser\Loader\LoaderAbstractFactory;
-use Parser\Manager\BaseParserManager;
-use Parser\Manager\CompatibleParserManager;
-use Parser\Manager\Factory\AbstractParserManagerFactory;
-use Parser\Manager\Factory\BaseParserManagerFactory;
-use Parser\Manager\Factory\LoaderManagerFactory;
-use Parser\Manager\Factory\SearchParserManagerFactory;
+
+// Parsers
+use Parser\Parser\Compatible as CompatibleParser;
+use Parser\Parser\Product as ProductParser;
+use Parser\Parser\Search\Simple as SimpleSearchParser;
+use Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
+use Parser\Parser\Proxy as ProxyParser;
+
+use Parser\Manager\LoaderManagerFactory;
 use Parser\Manager\LoaderManager;
-use Parser\Manager\ProductParserManager;
-use Parser\Manager\SearchParserManager;
+use Parser\Manager\Parser\Proxy;
+use Parser\Manager\Parser\Factory\AbstractParserManagerFactory;
+use Parser\Manager\Parser\Factory\BaseParserManagerFactory;
+use Parser\Manager\Parser\Factory\SearchParserManagerFactory;
+use Parser\Manager\Parser\Product as ProductParserManager;
+use Parser\Manager\Parser\Search\Simple as SimpleSearchParserManager;
+use Parser\Manager\Parser\BaseManager as BaseParserManager;
+use Parser\Manager\Parser\Compatible as CompatibleParserManager;
+
 use rollun\callback\Callback\Factory\CallbackAbstractFactoryAbstract;
 use rollun\callback\Callback\Factory\MultiplexerAbstractFactory;
 use rollun\callback\Callback\Interrupter\Factory\InterruptAbstractFactoryAbstract;
 use rollun\callback\Callback\Interrupter\Factory\ProcessAbstractFactory;
 use rollun\callback\Callback\Interrupter\Process;
 use rollun\callback\Callback\Multiplexer;
+
+// Default datastores
 use rollun\datastore\DataStore\CsvBase;
 use rollun\datastore\DataStore\DbTable;
 use rollun\datastore\DataStore\Factory\DataStoreAbstractFactory;
@@ -76,7 +90,7 @@ class ConfigProvider
                 'invokables' => [
                     UserAgentGenerator::class => UserAgentGenerator::class,
                     ProductParser::class => ProductParser::class,
-                    SearchParser::class => SearchParser::class,
+                    SimpleSearchParser::class => SimpleSearchParser::class,
                     CompatibleParser::class => CompatibleParser::class,
                     ProxyParser::class => ProxyParser::class,
                 ],
@@ -86,13 +100,13 @@ class ConfigProvider
                     // Manager factories
                     BaseParserManager::class => BaseParserManagerFactory::class,
                     ProductParserManager::class => BaseParserManagerFactory::class,
-                    SearchParserManager::class => SearchParserManagerFactory::class,
+                    SimpleSearchParserManager::class => SearchParserManagerFactory::class,
                     CompatibleParserManager::class => BaseParserManagerFactory::class,
-                    ProxyParserManager::class => BaseParserManagerFactory::class,
+                    Proxy::class => BaseParserManagerFactory::class,
 
                     // DataStores
-                    DocumentDataStore::class => DocumentFactory::class,
-                    SearchTaskDataStore::class => SearchTaskFactory::class,
+                    DocumentDataStore::class => DocumentDataStoreFactory::class,
+                    SearchTaskDataStore::class => SearchTaskDataStoreFactory::class,
                     ProxyDataStore::class => ProxyDataStoreFactory::class,
 
                     // Storage factories
@@ -118,7 +132,10 @@ class ConfigProvider
             ],
             StorageDetectorFactory::class => [
                 'productStorage' => "/https\:\/\/www\.ebay\.com\/itm\/[0-9]+/",
-                'searchStorage' => "/https\:\/\/www\.ebay\.com\/sch\//",
+                'searchStorage' => [
+                    "/https\:\/\/www\.ebay\.com\/sch\//",
+                    "/https\:\/\/www\.ebay\.com\/str\//"
+                ],
                 'compatibleStorage' => "/https\:\/\/frame\.ebay\.com\/ebaymotors\/ws\/eBayISAPI\.dll\?GetFitmentData/",
             ],
             SearchLoaderHelperFactory::class => [
@@ -134,7 +151,7 @@ class ConfigProvider
                 ],
                 SearchStorage::class => [
                     'loader' => 'parseLoader',
-                    'parser' => SearchParser::class,
+                    'parser' => SimpleSearchParser::class,
                     'searchLoaderHelper' => SearchLoaderHelper::class,
                 ],
                 CompatibleStorage::class => [
@@ -156,13 +173,13 @@ class ConfigProvider
                     ],
                 ],
             ],
-            DocumentFactory::class => [
-                DocumentFactory::KEY_DOWNLOAD_DATASTORE => 'downloadDataStore',
-                DocumentFactory::KEY_STORE_DIR => 'data/documents',
+            DocumentDataStoreFactory::class => [
+                DocumentDataStoreFactory::KEY_DOWNLOAD_DATASTORE => 'downloadDataStore',
+                DocumentDataStoreFactory::KEY_STORE_DIR => 'data/documents',
             ],
-            SearchTaskFactory::class => [
-                SearchTaskFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
-                SearchTaskFactory::KEY_SEARCH_LOADER_HELPER => SearchLoaderHelper::class,
+            SearchTaskDataStoreFactory::class => [
+                SearchTaskDataStoreFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
+                SearchTaskDataStoreFactory::KEY_SEARCH_LOADER_HELPER => SearchLoaderHelper::class,
             ],
             ProxyDataStoreFactory::class => [
                 ProxyDataStoreFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
@@ -196,8 +213,8 @@ class ConfigProvider
                 ],
             ],
             AbstractParserManagerFactory::KEY => [
-                SearchParserManager::class => [
-                    BaseParserManagerFactory::KEY_PARSER => SearchParser::class,
+                SimpleSearchParserManager::class => [
+                    BaseParserManagerFactory::KEY_PARSER => SimpleSearchParser::class,
                     BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
                     SearchParserManagerFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
                     BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => 'searchProductDataStore',
@@ -225,7 +242,7 @@ class ConfigProvider
                     BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => 'compatibleProductDataStore',
                     BaseParserManagerFactory::KEY_OPTIONS => [],
                 ],
-                ProxyParserManager::class => [
+                Proxy::class => [
                     BaseParserManagerFactory::KEY_PARSER => ProxyParser::class,
                     BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
                     BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE  => 'aspectProxyDataStore',
@@ -239,7 +256,7 @@ class ConfigProvider
                 ],
                 'searchParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SearchParserManager::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SimpleSearchParserManager::class,
                 ],
                 'productParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
@@ -251,7 +268,7 @@ class ConfigProvider
                 ],
                 'proxyParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => ProxyParserManager::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => Proxy::class,
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [

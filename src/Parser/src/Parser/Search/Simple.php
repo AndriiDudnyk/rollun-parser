@@ -4,11 +4,12 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Parser;
+namespace Parser\Parser\Search;
 
+use Parser\Parser\AbstractParser;
 use phpQuery as PhpQuery;
 
-class Search extends AbstractParser
+class Simple extends AbstractParser
 {
     public const PARSER_NAME = 'ebaySearch';
 

@@ -4,14 +4,14 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser\Factory;
+namespace Parser\DataStore\Storage\Factory;
 
 use InvalidArgumentException;
-use Parser\DataStore\Parser\ParserStorageInterface;
-use Parser\DataStore\Parser\Search;
+use Parser\DataStore\Storage\StorageInterface;
+use Parser\DataStore\Storage\Search;
 use Psr\Container\ContainerInterface;
 
-class SearchStorageFactory extends BaseStorageFactory
+class SearchFactory extends BaseStorageFactory
 {
     const KEY_SEARCH_LOADER_HELPER = 'searchLoaderHelper';
 
@@ -19,9 +19,9 @@ class SearchStorageFactory extends BaseStorageFactory
      * @param ContainerInterface $container
      * @param $serviceConfig
      * @param $class
-     * @return ParserStorageInterface
+     * @return StorageInterface
      */
-    public function createParserStorage(ContainerInterface $container, $serviceConfig, $class): ParserStorageInterface
+    public function createParserStorage(ContainerInterface $container, $serviceConfig, $class): StorageInterface
     {
         $loader = $this->getLoader($container, $serviceConfig);
         $parser = $this->getParser($container, $serviceConfig);

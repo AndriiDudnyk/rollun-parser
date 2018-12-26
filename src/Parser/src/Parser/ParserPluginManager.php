@@ -6,6 +6,7 @@
 
 namespace Parser\Parser;
 
+use Parser\Parser\Search\Simple as SimpleSeacrhParser;
 use Zend\ServiceManager\AbstractPluginManager;
 use Zend\ServiceManager\Factory\InvokableFactory;
 
@@ -15,8 +16,7 @@ class ParserPluginManager extends AbstractPluginManager
 
     protected $factories = [
         Product::class => InvokableFactory::class,
-        Search::class => InvokableFactory::class,
-        SellerParser::class => InvokableFactory::class,
+        SimpleSeacrhParser::class => InvokableFactory::class,
         Compatible::class => InvokableFactory::class,
     ];
 }

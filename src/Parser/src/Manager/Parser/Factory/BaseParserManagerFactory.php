@@ -4,14 +4,14 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager\Factory;
+namespace Parser\Manager\Parser\Factory;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
 use Parser\DataStore\Document;
-use Parser\Manager\BaseParserManager;
 use Parser\Parser\ParserInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
+use Parser\Manager\Parser\BaseManager;
 
 class BaseParserManagerFactory extends AbstractParserManagerFactory
 {
@@ -27,7 +27,7 @@ class BaseParserManagerFactory extends AbstractParserManagerFactory
         ContainerInterface $container,
         array $serviceConfig,
         $class
-    ): BaseParserManager {
+    ): BaseManager {
         $parser = $this->createParser($container, $serviceConfig);
         $parseResultDataStore = $this->createParseResultDataStore($container, $serviceConfig);
         $documentDataStore = $this->createDocumentDataStore($container, $serviceConfig);

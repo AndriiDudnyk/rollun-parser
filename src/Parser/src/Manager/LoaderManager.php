@@ -8,6 +8,7 @@ namespace Parser\Manager;
 
 use Parser\DataStore\Document;
 use Parser\Loader\LoaderInterface;
+use Parser\Manager\Parser\BaseManager;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
@@ -69,7 +70,7 @@ class LoaderManager
                 'parser' => $task['parser'],
 
                 // Options for parser come through loader manager options
-                'options' => $task['options'][BaseParserManager::KEY_OPTIONS] ?? [],
+                'options' => $task['options'][BaseManager::KEY_OPTIONS] ?? [],
                 'status' => 0,
             ]);
             $status = self::STATUS_SUCCESS;
@@ -90,7 +91,7 @@ class LoaderManager
     protected function getLoader($options): LoaderInterface
     {
         $loader = clone $this->loader;
-        unset($options[BaseParserManager::KEY_OPTIONS]);
+        unset($options[BaseManager::KEY_OPTIONS]);
         $loader->setOptions($options);
 
         return $loader;

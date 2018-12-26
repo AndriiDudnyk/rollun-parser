@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager;
+namespace Parser\Manager\Parser;
 
 use Parser\DataStore\Document;
 use Parser\Parser\ParserInterface;
@@ -14,7 +14,7 @@ use rollun\datastore\Rql\RqlQuery;
 use rollun\dic\InsideConstruct;
 use RuntimeException;
 
-abstract class BaseParserManager
+abstract class BaseManager
 {
     const STATUS_SUCCESS = 1;
     const STATUS_FAILED = 2;

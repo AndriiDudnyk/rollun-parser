@@ -4,11 +4,11 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\Manager;
+namespace Parser\Manager\Parser;
 
 use InvalidArgumentException;
 
-class CompatibleParserManager extends BaseParserManager
+class Compatible extends BaseManager
 {
     protected function saveResult(array $uris)
     {

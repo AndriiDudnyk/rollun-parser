@@ -4,9 +4,9 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser\Factory;
+namespace Parser\DataStore\Storage\Factory;
 
-use Parser\DataStore\Parser\StoragePluginManager;
+use Parser\DataStore\Storage\StoragePluginManager;
 use Psr\Container\ContainerInterface;
 
 class StoragePluginManagerFactory

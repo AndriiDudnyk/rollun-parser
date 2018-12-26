@@ -4,11 +4,11 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser;
+namespace Parser\DataStore\Storage;
 
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 
-interface ParserStorageInterface extends DataStoresInterface
+interface StorageInterface extends DataStoresInterface
 {
 
 }

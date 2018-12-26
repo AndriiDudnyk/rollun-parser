@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser;
+namespace Parser\DataStore\Storage;
 
 use InvalidArgumentException;
 use rollun\datastore\DataStore\DataStoreException;
@@ -12,7 +12,7 @@ use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use Xiag\Rql\Parser\Query;
 
-abstract class AbstractStorage implements ParserStorageInterface
+abstract class AbstractStorage implements StorageInterface
 {
     /**
      * @return int|void

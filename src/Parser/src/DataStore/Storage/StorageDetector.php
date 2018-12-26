@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser;
+namespace Parser\DataStore\Storage;
 
 use InvalidArgumentException;
 use Xiag\Rql\Parser\Query;
@@ -31,7 +31,7 @@ class StorageDetector extends AbstractStorage
         return $storage->query($query);
     }
 
-    public function createStorage($uri): ParserStorageInterface
+    public function createStorage($uri): StorageInterface
     {
         $storageService = $this->getStorageService($uri);
 
@@ -46,9 +46,17 @@ class StorageDetector extends AbstractStorage
     {
         $parserStorage = [];
 
-        foreach ($this->patterns as $storage => $pattern) {
-            if (preg_match($pattern, $uri)) {
-                $parserStorage[] = $storage;
+        foreach ($this->patterns as $storage => $patterns) {
+            if (is_array($patterns)) {
+                foreach ($patterns as $pattern) {
+                    if (preg_match($pattern, $uri)) {
+                        $parserStorage[] = $storage;
+                    }
+                }
+            } elseif (is_string($patterns)) {
+                if (preg_match($patterns, $uri)) {
+                    $parserStorage[] = $storage;
+                }
             }
         }
 

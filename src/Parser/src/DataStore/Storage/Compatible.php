@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Parser;
+namespace Parser\DataStore\Storage;
 
 use Parser\Loader\Loader;
 use Parser\Parser\Compatible as CompatibleParser;
