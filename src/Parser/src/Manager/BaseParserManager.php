@@ -16,6 +16,10 @@ use RuntimeException;
 
 abstract class BaseParserManager
 {
+    const STATUS_SUCCESS = 1;
+    const STATUS_FAILED = 2;
+    const STATUS_NOT_PARSED = 3;
+
     const KEY_OPTIONS = 'parserOptions';
 
     protected $parser;
@@ -65,21 +69,24 @@ abstract class BaseParserManager
 
         try {
             $records = $this->parser->parse($document['document']);
-            $this->documentDataStore->update([
-                'id' => $document['id'],
-                'status' => 1,
-            ]);
 
-            if (!$records) {
+            if ($records) {
+                $records = $this->processResult($records);
+                $this->saveResult($records);
+                $status = self::STATUS_SUCCESS;
+            } else {
                 $this->logger->warning("Parser did not parse any data from document #{$document['id']}");
-                return;
+                $status = self::STATUS_NOT_PARSED;
             }
-
-            $records = $this->processResult($records);
-            $this->saveResult($records);
         } catch (\Throwable $t) {
+            $status = self::STATUS_FAILED;
             $this->logger->warning("Parser failed parsing document #{$document['id']}", [
                 'exception' => $t,
+            ]);
+        } finally {
+            $this->documentDataStore->update([
+                'id' => $document['id'],
+                'status' => $status,
             ]);
         }
     }
@@ -89,7 +96,7 @@ abstract class BaseParserManager
         return $records;
     }
 
-    abstract protected function saveResult(array $records);
+    abstract protected function saveResult(array $uris);
 
     protected function getDocument($parser): ?array
     {

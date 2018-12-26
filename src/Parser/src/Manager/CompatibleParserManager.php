@@ -10,17 +10,16 @@ use InvalidArgumentException;
 
 class CompatibleParserManager extends BaseParserManager
 {
-    protected function saveResult(array $records)
+    protected function saveResult(array $uris)
     {
         if (!$productId = $this->options['productId'] ?? null) {
             throw new InvalidArgumentException("Invalid option 'productId'");
         }
 
-        foreach ($records as $record) {
+        foreach ($uris as $record) {
             $this->parseResultDataStore->create(array_merge(
                 [
                     'product_id' => $productId,
-                    'created_at' => time(),
                 ],
                 $record
             ));

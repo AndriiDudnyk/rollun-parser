@@ -12,4 +12,18 @@ class Product extends JsonDecorator
     {
         return ['specs', 'shipping', 'imgs'];
     }
+
+    public function create($itemData, $rewriteIfExist = false)
+    {
+        $itemData['created_at'] = time();
+
+        return parent::create($itemData, $rewriteIfExist);
+    }
+
+    public function update($itemData, $createIfAbsent = false)
+    {
+        unset($itemData['created_at']);
+
+        return parent::update($itemData, $createIfAbsent);
+    }
 }

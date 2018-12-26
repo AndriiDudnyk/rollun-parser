@@ -4,9 +4,10 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore;
+namespace Parser\DataStore\Factory;
 
 use InvalidArgumentException;
+use Parser\DataStore\Document;
 use Psr\Container\ContainerInterface;
 
 class DocumentFactory

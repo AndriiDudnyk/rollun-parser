@@ -7,6 +7,8 @@
 namespace Parser\Manager;
 
 use Parser\DataStore\Document;
+use Parser\DataStore\Task;
+use Parser\Loader\Loader;
 use Parser\Parser\Compatible;
 use Parser\Parser\ParserInterface;
 use Parser\Parser\Product;
@@ -23,7 +25,7 @@ class SearchParserManager extends BaseParserManager
         ParserInterface $parser,
         DataStoresInterface $parseResultDataStore,
         Document $documentDataStore,
-        DataStoresInterface $taskDataStore,
+        Task $taskDataStore,
         array $options,
         LoggerInterface $logger = null
     ) {
@@ -69,31 +71,18 @@ class SearchParserManager extends BaseParserManager
     protected function createNewTasks($itemId)
     {
         $productUri = rtrim($this->options['productUri'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $itemId;
-
-        $this->taskDataStore->create([
-            'parser' => Product::PARSER_NAME,
-            'uri' => $productUri,
-            'created_at' => time(),
-            'options' => [
-                'useProxy' => 1,
-                'fakeUserAgent' => 1,
-            ],
-            'status' => 0,
+        $this->taskDataStore->addTask(Product::PARSER_NAME, $productUri, [
+            Loader::USE_PROXY_OPTION => 1,
+            Loader::FAKE_USER_AGENT_OPTION => 1,
         ]);
 
         $compatibleUri = rtrim($this->options['compatibleUri']) . $itemId;
-        $this->taskDataStore->create([
-            'parser' => Compatible::PARSER_NAME,
-            'uri' => $compatibleUri,
-            'created_at' => time(),
-            'options' => [
-                'useProxy' => 1,
-                'fakeUserAgent' => 1,
-                self::KEY_OPTIONS => [
-                    'productId' => $itemId
-                ]
-            ],
-            'status' => 0,
+        $this->taskDataStore->addTask(Compatible::PARSER_NAME, $compatibleUri, [
+            Loader::USE_PROXY_OPTION => 1,
+            Loader::FAKE_USER_AGENT_OPTION => 1,
+            self::KEY_OPTIONS => [
+                'productId' => $itemId
+            ]
         ]);
     }
 
@@ -109,9 +98,9 @@ class SearchParserManager extends BaseParserManager
         parent::__wakeup();
     }
 
-    protected function saveResult(array $records)
+    protected function saveResult(array $uris)
     {
-        foreach ($records as $record) {
+        foreach ($uris as $record) {
             $this->parseResultDataStore->create($record);
         }
     }

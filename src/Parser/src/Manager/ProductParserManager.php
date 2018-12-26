@@ -54,8 +54,8 @@ class ProductParserManager extends BaseParserManager
         return $records;
     }
 
-    protected function saveResult(array $records)
+    protected function saveResult(array $uris)
     {
-        $this->parseResultDataStore->create($records);
+        $this->parseResultDataStore->create($uris);
     }
 }

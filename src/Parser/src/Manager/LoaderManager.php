@@ -18,6 +18,9 @@ use RuntimeException;
 
 class LoaderManager
 {
+    const STATUS_SUCCESS = 1;
+    const STATUS_FAILED = 2;
+
     protected $loader;
 
     protected $htmlDataStore;
@@ -64,20 +67,22 @@ class LoaderManager
             $this->htmlDataStore->create([
                 'document' => $document,
                 'parser' => $task['parser'],
-                'created_at' => time(),
 
                 // Options for parser come through loader manager options
                 'options' => $task['options'][BaseParserManager::KEY_OPTIONS] ?? [],
                 'status' => 0,
             ]);
-            $this->taskDataStore->update([
-                'id' => $task['id'],
-                'status' => 1,
-            ]);
+            $status = self::STATUS_SUCCESS;
             $this->logger->info("Loader successfully finish task #{$task['id']}");
         } catch (RuntimeException | ClientExceptionInterface $clientExc) {
+            $status = self::STATUS_FAILED;
             $this->logger->info("Loader failed task #{$task['id']}", [
                 'exception' => $clientExc,
+            ]);
+        } finally {
+            $this->taskDataStore->update([
+                'id' => $task['id'],
+                'status' => $status,
             ]);
         }
     }

@@ -9,22 +9,21 @@ namespace Parser\Loader;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\RequestException;
+use Parser\DataStore\Proxy;
 use Parser\UserAgentGenerator;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
-use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
-use rollun\datastore\Rql\RqlQuery;
+use ReflectionException;
 use rollun\dic\InsideConstruct;
 use RuntimeException;
-use Xiag\Rql\Parser\Node\LimitNode;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 
 class Loader implements LoaderInterface
 {
     const DEF_MAX_ATTEMPTS = 1;
     const DEF_USER_AGENT_OS = 'linux';
+    const DEF_CREATE_TASK_IF_NO_PROXIES = false;
 
     // Options
     const MAX_ATTEMPTS_OPTION = 'maxAttempts'; // int
@@ -35,10 +34,11 @@ class Loader implements LoaderInterface
     const COOKIE_DOMAIN_OPTION = 'cookieDomain'; // string
     const ALLOW_REDIRECT_OPTION = 'allowRedirect'; // bool
     const CONNECTION_TIMEOUT_OPTION = 'connectionTimeout'; // int
+    const CREATE_TASK_IF_NO_PROXIES_OPTION = 'createTaskIfNoProxy';
 
     protected $userAgentGenerator;
 
-    protected $proxies;
+    protected $proxyDataStore;
 
     protected $options;
 
@@ -52,15 +52,15 @@ class Loader implements LoaderInterface
     /**
      * Loader constructor.
      * @param UserAgentGenerator $userAgentGenerator
-     * @param DataStoresInterface $proxyDataStore
+     * @param Proxy $proxyDataStore
      * @param ServerRequestFactoryInterface $requestFactory
      * @param array $options
      * @param LoggerInterface|null $logger
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function __construct(
         UserAgentGenerator $userAgentGenerator,
-        DataStoresInterface $proxyDataStore,
+        Proxy $proxyDataStore,
         ServerRequestFactoryInterface $requestFactory,
         array $options = [],
         LoggerInterface $logger = null
@@ -68,7 +68,7 @@ class Loader implements LoaderInterface
         InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
 
         $this->userAgentGenerator = $userAgentGenerator;
-        $this->proxies = $proxyDataStore;
+        $this->proxyDataStore = $proxyDataStore;
         $this->setOptions($options);
         $this->requestFactory = $requestFactory;
     }
@@ -109,32 +109,12 @@ class Loader implements LoaderInterface
         $uri = $request->getUri()->__toString();
         $method = $request->getMethod();
 
-        $useProxy = $this->options[self::USE_PROXY_OPTION] ?? false;
         $maxAttempts = $this->options[self::MAX_ATTEMPTS_OPTION] ?? self::DEF_MAX_ATTEMPTS;
         $attempt = 0;
 
-        if ($useProxy) {
-            $proxy = $this->getUnusedProxy();
-        } else {
-            $proxy = null;
-        }
-
-        try {
-            $response = $this->createClient($proxy)->request($method, $uri);
-        } catch (RequestException $e) {
-            $this->logger->debug('Failed to fetch request', [
-                'exception' => $e
-            ]);
-            $response = $e->getResponse();
-        }
-
-        while (!$response && $attempt < $maxAttempts) {
-            if ($useProxy) {
-                $this->setUsedProxy($proxy);
-                $proxy = $this->getUnusedProxy();
-            } else {
-                $proxy = null;
-            }
+        do {
+            $attempt++;
+            $proxy = $this->changeProxy($proxy ?? null);
 
             try {
                 $response = $this->createClient($proxy)->request($method, $uri);
@@ -144,15 +124,40 @@ class Loader implements LoaderInterface
                 ]);
                 $response = $e->getResponse();
             }
-
-            $attempt++;
-        }
+        } while (!$response && $attempt < $maxAttempts);
 
         if (!$response) {
-            throw new ClientException("Can't fetch response", $request);
+            throw new ClientException("Can't fetch response using {$attempt} attempts", $request);
         }
 
         return $response;
+    }
+
+    /**
+     * @param null $oldProxyUri
+     * @return string|null
+     */
+    protected function changeProxy($oldProxyUri = null)
+    {
+        $useProxy = $this->options[self::USE_PROXY_OPTION] ?? false;
+
+        if (!$useProxy) {
+            return null;
+        }
+
+        if ($oldProxyUri) {
+            $this->proxyDataStore->setUsedProxy($oldProxyUri);
+        }
+
+        $createTaskIfNoExist = (bool)$this->options[self::CREATE_TASK_IF_NO_PROXIES_OPTION] ??
+            self::DEF_CREATE_TASK_IF_NO_PROXIES;
+
+        if (!$newProxyUri = $this->proxyDataStore->getUnusedProxy($createTaskIfNoExist)) {
+            $addMessage = $createTaskIfNoExist ? ', and add new task for proxy parser' : '';
+            throw new RuntimeException("Unused proxies run out" . $addMessage);
+        }
+
+        return $newProxyUri;
     }
 
     /**
@@ -191,48 +196,9 @@ class Loader implements LoaderInterface
         return new Client($options);
     }
 
-    /**
-     * @param RequestInterface $request
-     * @return string
-     */
-    protected function createUrl(RequestInterface $request): string
-    {
-        $uri = $request->getUri();
-        $path = ltrim($uri->getPath(), '/');
-
-        return "{$uri->getScheme()}://{$uri->getHost()}:{$uri->getPort()}/{$path}";
-    }
-
-    public function getUnusedProxy()
-    {
-        $proxies = $this->proxies->query(new RqlQuery('eqf(is_used)&limit(1)'));
-
-        if (!count($proxies)) {
-            throw new RuntimeException('Unused proxies run out');
-        }
-
-        $proxy = current($proxies);
-
-        return $proxy['uri'];
-    }
-
-    public function setUsedProxy(string $uri)
-    {
-        $query = new RqlQuery();
-        $query->setQuery(new EqNode('uri', $uri));
-        $query->setLimit(new LimitNode(1));
-
-        $proxies = $this->proxies->query($query);
-        $proxy = current($proxies);
-        $this->proxies->update([
-            'id' => $proxy['id'],
-            'is_used' => 1,
-        ]);
-    }
-
     public function __sleep()
     {
-        return ['proxies', 'options', 'userAgentGenerator', 'requestFactory'];
+        return ['proxyDataStore', 'options', 'userAgentGenerator', 'requestFactory'];
     }
 
     public function __wakeup()
