@@ -14,7 +14,7 @@ use Parser\Manager\Parser\BaseManager;
 use Parser\Parser\ParserInterface;
 use Psr\Container\ContainerInterface;
 
-class BaseStorageFactory extends AbstractStorageFactory
+class BaseFactory extends AbstractStorageFactory
 {
     const KEY_LOADER = 'loader';
 

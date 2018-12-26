@@ -8,7 +8,7 @@ namespace Parser\Manager\Parser;
 
 use Parser\DataStore\Document;
 use Parser\DataStore\Proxy as ProxyDataStore;
-use Parser\Parser\ParserInterface;
+use Parser\Parser\Proxy as ProxyParser;
 use Psr\Log\LoggerInterface;
 
 class Proxy extends BaseManager
@@ -19,7 +19,7 @@ class Proxy extends BaseManager
     protected $parseResultDataStore;
 
     public function __construct(
-        ParserInterface $parser,
+        ProxyParser $parser,
         ProxyDataStore $proxyDataStore,
         Document $documentDataStore,
         array $options,

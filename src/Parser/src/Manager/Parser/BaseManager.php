@@ -66,6 +66,7 @@ abstract class BaseManager
         }
 
         $this->setOptions($document['options']);
+        $status = null;
 
         try {
             $records = $this->parser->parse($document['document']);
@@ -83,12 +84,12 @@ abstract class BaseManager
             $this->logger->warning("Parser failed parsing document #{$document['id']}", [
                 'exception' => $t,
             ]);
-        } finally {
-            $this->documentDataStore->update([
-                'id' => $document['id'],
-                'status' => $status,
-            ]);
         }
+
+        $this->documentDataStore->update([
+            'id' => $document['id'],
+            'status' => $status,
+        ]);
     }
 
     protected function processResult(array $records): ?array

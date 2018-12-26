@@ -10,7 +10,7 @@ use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
 use Parser\Manager\Parser\BaseManager;
 
-abstract class AbstractParserManagerFactory
+abstract class AbstractFactory
 {
     const KEY = 'parserManagers';
 

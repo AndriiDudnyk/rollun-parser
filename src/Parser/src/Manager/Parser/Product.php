@@ -8,7 +8,7 @@ namespace Parser\Manager\Parser;
 
 use Parser\DataStore\Document;
 use Parser\DataStore\Product as ProductDataStore;
-use Parser\Parser\ParserInterface;
+use Parser\Parser\Product as ProductParser;
 use Psr\Log\LoggerInterface;
 
 class Product extends BaseManager
@@ -16,7 +16,7 @@ class Product extends BaseManager
     const DEF_MAX_CORRUPT_RECORDS = 30;
 
     public function __construct(
-        ParserInterface $parser,
+        ProductParser $parser,
         ProductDataStore $parseResultDataStore,
         Document $documentDataStore,
         array $options,

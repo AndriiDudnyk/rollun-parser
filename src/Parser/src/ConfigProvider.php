@@ -22,11 +22,12 @@ use Parser\DataStore\Proxy as ProxyDataStore;
 
 // Storage (extends DataStore)
 use Parser\DataStore\Storage\Factory\AbstractStorageFactory;
-use Parser\DataStore\Storage\Factory\BaseStorageFactory;
+use Parser\DataStore\Storage\Factory\BaseFactory as BaseStorageFactory;
 use Parser\DataStore\Storage\Factory\SearchFactory as SearchStorageFactory;
 use Parser\DataStore\Storage\Factory\StoragePluginManagerFactory;
 use Parser\DataStore\Storage\Product as ProductStorage;
-use Parser\DataStore\Storage\Search as SearchStorage;
+use Parser\DataStore\Storage\Search\Simple as SimpleSearchStorage;
+use Parser\DataStore\Storage\Search\EbayMotors as EbayMotorsSearchStorage;
 use Parser\DataStore\Storage\Compatible as CompatibleStorage;
 use Parser\DataStore\Storage\StorageDetector;
 use Parser\DataStore\Storage\StorageDetectorFactory;
@@ -47,10 +48,11 @@ use Parser\Parser\Proxy as ProxyParser;
 
 use Parser\Manager\LoaderManagerFactory;
 use Parser\Manager\LoaderManager;
-use Parser\Manager\Parser\Proxy;
-use Parser\Manager\Parser\Factory\AbstractParserManagerFactory;
-use Parser\Manager\Parser\Factory\BaseParserManagerFactory;
-use Parser\Manager\Parser\Factory\SearchParserManagerFactory;
+use Parser\Manager\Parser\Search\EbayMotors as EbayMotorsParserManager;
+use Parser\Manager\Parser\Proxy as ProxyParserManager;
+use Parser\Manager\Parser\Factory\AbstractFactory;
+use Parser\Manager\Parser\Factory\BaseFactory as BaseParserManagerFactory;
+use Parser\Manager\Parser\Factory\SearchFactory;
 use Parser\Manager\Parser\Product as ProductParserManager;
 use Parser\Manager\Parser\Search\Simple as SimpleSearchParserManager;
 use Parser\Manager\Parser\BaseManager as BaseParserManager;
@@ -93,6 +95,7 @@ class ConfigProvider
                     SimpleSearchParser::class => SimpleSearchParser::class,
                     CompatibleParser::class => CompatibleParser::class,
                     ProxyParser::class => ProxyParser::class,
+                    EbayMotorsSearchParser::class => EbayMotorsSearchParser::class,
                 ],
                 'factories' => [
                     LoaderManager::class => LoaderManagerFactory::class,
@@ -100,9 +103,10 @@ class ConfigProvider
                     // Manager factories
                     BaseParserManager::class => BaseParserManagerFactory::class,
                     ProductParserManager::class => BaseParserManagerFactory::class,
-                    SimpleSearchParserManager::class => SearchParserManagerFactory::class,
+                    SimpleSearchParserManager::class => SearchFactory::class,
                     CompatibleParserManager::class => BaseParserManagerFactory::class,
-                    Proxy::class => BaseParserManagerFactory::class,
+                    ProxyParserManager::class => BaseParserManagerFactory::class,
+                    EbayMotorsParserManager::class => BaseParserManagerFactory::class,
 
                     // DataStores
                     DocumentDataStore::class => DocumentDataStoreFactory::class,
@@ -112,7 +116,8 @@ class ConfigProvider
                     // Storage factories
                     ProductStorage::class => BaseStorageFactory::class,
                     CompatibleStorage::class => BaseStorageFactory::class,
-                    SearchStorage::class => SearchStorageFactory::class,
+                    SimpleSearchStorage::class => SearchStorageFactory::class,
+                    EbayMotorsSearchStorage::class => SearchStorageFactory::class,
                     StorageDetector::class => StorageDetectorFactory::class,
                     StoragePluginManager::class => StoragePluginManagerFactory::class,
 
@@ -122,20 +127,22 @@ class ConfigProvider
                     LoaderAbstractFactory::class,
                 ],
                 'aliases' => [
+                    // Parser storage
                     'productStorage' => ProductStorage::class,
-                    'searchStorage' => SearchStorage::class,
+                    'simpleSearchStorage' => SimpleSearchStorage::class,
+                    'ebayMotorsSearchStorage' => EbayMotorsSearchStorage::class,
                     'compatibleStorage' => CompatibleStorage::class,
                     'parserStorage' => StorageDetector::class,
-                    'searchTaskDataStore' => SearchTaskDataStore::class,
+
+                    // Aliases to aspect DataStores
+                    'aspectSearchTaskDataStore' => SearchTaskDataStore::class,
                     'aspectProxyDataStore' => ProxyDataStore::class,
                 ],
             ],
             StorageDetectorFactory::class => [
                 'productStorage' => "/https\:\/\/www\.ebay\.com\/itm\/[0-9]+/",
-                'searchStorage' => [
-                    "/https\:\/\/www\.ebay\.com\/sch\//",
-                    "/https\:\/\/www\.ebay\.com\/str\//"
-                ],
+                'searchStorage' => "/https\:\/\/www\.ebay\.com\/sch\/eBay-Motors\//",
+                'ebayMotorsSearchStorage' => '/https\:\/\/www\.ebay\.com\/sch\//',
                 'compatibleStorage' => "/https\:\/\/frame\.ebay\.com\/ebaymotors\/ws\/eBayISAPI\.dll\?GetFitmentData/",
             ],
             SearchLoaderHelperFactory::class => [
@@ -149,9 +156,14 @@ class ConfigProvider
                     'loader' => 'parseLoader',
                     'parser' => ProductParser::class,
                 ],
-                SearchStorage::class => [
+                SimpleSearchStorage::class => [
                     'loader' => 'parseLoader',
                     'parser' => SimpleSearchParser::class,
+                    'searchLoaderHelper' => SearchLoaderHelper::class,
+                ],
+                EbayMotorsSearchStorage::class => [
+                    'loader' => 'parseLoader',
+                    'parser' => EbayMotorsSearchParser::class,
                     'searchLoaderHelper' => SearchLoaderHelper::class,
                 ],
                 CompatibleStorage::class => [
@@ -166,7 +178,6 @@ class ConfigProvider
                         Loader::CREATE_TASK_IF_NO_PROXIES_OPTION => 1,
                         Loader::COOKIE_DOMAIN_OPTION => '.ebay.com',
                         Loader::USE_PROXY_OPTION => 1,
-                        Loader::FAKE_USER_OS_OPTION => 1,
                         Loader::MAX_ATTEMPTS_OPTION => 10,
                         Loader::CONNECTION_TIMEOUT_OPTION => 10,
                         Loader::ALLOW_REDIRECT_OPTION => 1,
@@ -174,7 +185,7 @@ class ConfigProvider
                 ],
             ],
             DocumentDataStoreFactory::class => [
-                DocumentDataStoreFactory::KEY_DOWNLOAD_DATASTORE => 'downloadDataStore',
+                DocumentDataStoreFactory::KEY_DOWNLOAD_DATASTORE => 'documentDataStore',
                 DocumentDataStoreFactory::KEY_STORE_DIR => 'data/documents',
             ],
             SearchTaskDataStoreFactory::class => [
@@ -187,7 +198,6 @@ class ConfigProvider
                 ProxyDataStoreFactory::KEY_PROXY_LIST_URI => 'https://free-proxy-list.net/',
                 ProxyDataStoreFactory::KEY_TASK_OPTIONS => [
                     Loader::USE_PROXY_OPTION => 0,
-                    Loader::FAKE_USER_OS_OPTION => 1,
                 ],
             ],
             LoaderManagerFactory::class => [
@@ -205,20 +215,21 @@ class ConfigProvider
                 'parsers' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
-                        'searchParserProcess',
-                        'productParserProcess',
-                        'compatibleParserProcess',
-                        'proxyParserProcess',
+//                        'simpleSearchParserProcess',
+//                        'productParserProcess',
+//                        'compatibleParserProcess',
+//                        'proxyParserProcess',
+                        'ebayMotorsSearchParserProcess'
                     ],
                 ],
             ],
-            AbstractParserManagerFactory::KEY => [
+            AbstractFactory::KEY => [
                 SimpleSearchParserManager::class => [
-                    BaseParserManagerFactory::KEY_PARSER => SimpleSearchParser::class,
-                    BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
-                    SearchParserManagerFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
-                    BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => 'searchProductDataStore',
-                    BaseParserManagerFactory::KEY_OPTIONS => [
+                    SearchFactory::KEY_PARSER => SimpleSearchParser::class,
+                    SearchFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
+                    SearchFactory::KEY_TASK_DATASTORE => 'aspectTaskDataStore',
+                    SearchFactory::KEY_PARSE_RESULT_DATASTORE => 'searchProductDataStore',
+                    SearchFactory::KEY_OPTIONS => [
                         'createProductParseTask' => 1,
                         'productUri' => 'https://www.ebay.com/itm',
                         'compatibleUri' => 'https://frame.ebay.com/ebaymotors/ws/eBayISAPI.dll?'
@@ -239,11 +250,17 @@ class ConfigProvider
                 CompatibleParserManager::class => [
                     BaseParserManagerFactory::KEY_PARSER => CompatibleParser::class,
                     BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
-                    BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => 'compatibleProductDataStore',
+                    BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => 'compatibleDataStore',
                     BaseParserManagerFactory::KEY_OPTIONS => [],
                 ],
-                Proxy::class => [
+                ProxyParserManager::class => [
                     BaseParserManagerFactory::KEY_PARSER => ProxyParser::class,
+                    BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
+                    BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE  => 'aspectProxyDataStore',
+                    BaseParserManagerFactory::KEY_OPTIONS => [],
+                ],
+                EbayMotorsParserManager::class => [
+                    BaseParserManagerFactory::KEY_PARSER => EbayMotorsSearchParser::class,
                     BaseParserManagerFactory::KEY_DOCUMENT_DATASTORE => DocumentDataStore::class,
                     BaseParserManagerFactory::KEY_PARSE_RESULT_DATASTORE  => 'aspectProxyDataStore',
                     BaseParserManagerFactory::KEY_OPTIONS => [],
@@ -254,7 +271,7 @@ class ConfigProvider
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => LoaderManager::class,
                 ],
-                'searchParserProcess' => [
+                'simpleSearchParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SimpleSearchParserManager::class,
                 ],
@@ -268,7 +285,11 @@ class ConfigProvider
                 ],
                 'proxyParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => Proxy::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => ProxyParserManager::class,
+                ],
+                'ebayMotorsSearchParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => EbayMotorsParserManager::class,
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [
@@ -282,7 +303,7 @@ class ConfigProvider
                     'filename' => 'data/datastores/search_products.csv',
                     'delimiter' => ',',
                 ],
-                'compatibleProductDataStore' => [
+                'compatibleDataStore' => [
                     'class' => CsvBase::class,
                     'filename' => 'data/datastores/compatibles.csv',
                     'delimiter' => ',',
@@ -293,7 +314,7 @@ class ConfigProvider
                     'filename' => 'data/datastores/proxies.csv',
                     'delimiter' => ',',
                 ],
-                'downloadDataStore' => [
+                'documentDataStore' => [
                     'class' => CsvBase::class,
                     'filename' => 'data/datastores/documents.csv',
                     'delimiter' => ',',

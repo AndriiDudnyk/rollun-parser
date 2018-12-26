@@ -11,7 +11,7 @@ use phpQuery as PhpQuery;
 
 class Simple extends AbstractParser
 {
-    public const PARSER_NAME = 'ebaySearch';
+    public const PARSER_NAME = 'simpleSearch';
 
     /**
      * @param string $data
@@ -29,9 +29,9 @@ class Simple extends AbstractParser
             $products[$key]['url'] = $pq->find('.s-item__link')->attr('href');
             $urlComponents = parse_url($products[$key]['url']);
             $path = $urlComponents['path'];
-            $pathParts = explode('/', $path);
+            $parts = explode('/', $path);
 
-            $products[$key]['item_id'] = end($pathParts);
+            $products[$key]['item_id'] = end($parts);
             $products[$key]['img'] = $pq->find('.s-item__image-img')->attr('src');
             $products[$key]['price'] = $pq->find('span.s-item__price')->text();
             $products[$key]['shipping']['cost'] = $pq->find('.s-item__shipping')->text();

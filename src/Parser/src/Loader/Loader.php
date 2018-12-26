@@ -29,7 +29,7 @@ class Loader implements LoaderInterface
     const MAX_ATTEMPTS_OPTION = 'maxAttempts'; // int
     const USE_PROXY_OPTION = 'useProxy'; // bool
     const FAKE_USER_AGENT_OPTION = 'fakeUserAgent'; // bool
-    const FAKE_USER_OS_OPTION = 'fakeUserAgentOS'; // 'linux' or 'windows' or 'mac'
+    const FAKE_USER_AGENT_OS_OPTION = 'fakeUserAgentOS'; // 'linux' or 'windows' or 'mac'
     const COOKIES_OPTION = 'cookies'; // array
     const COOKIE_DOMAIN_OPTION = 'cookieDomain'; // string
     const ALLOW_REDIRECT_OPTION = 'allowRedirect'; // bool
@@ -170,7 +170,7 @@ class Loader implements LoaderInterface
 
         if (!empty($this->options[self::FAKE_USER_AGENT_OPTION])) {
             $userAgent = $this->userAgentGenerator->generate(
-                $this->options[self::FAKE_USER_OS_OPTION] ?? self::DEF_USER_AGENT_OS
+                $this->options[self::FAKE_USER_AGENT_OS_OPTION] ?? self::DEF_USER_AGENT_OS
             );
             $options['headers']['User-Agent'] = $userAgent;
         }

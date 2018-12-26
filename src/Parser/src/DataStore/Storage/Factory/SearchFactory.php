@@ -7,11 +7,11 @@
 namespace Parser\DataStore\Storage\Factory;
 
 use InvalidArgumentException;
+use Parser\DataStore\Storage\Search\BaseSearch;
 use Parser\DataStore\Storage\StorageInterface;
-use Parser\DataStore\Storage\Search;
 use Psr\Container\ContainerInterface;
 
-class SearchFactory extends BaseStorageFactory
+class SearchFactory extends BaseFactory
 {
     const KEY_SEARCH_LOADER_HELPER = 'searchLoaderHelper';
 
@@ -19,7 +19,7 @@ class SearchFactory extends BaseStorageFactory
      * @param ContainerInterface $container
      * @param $serviceConfig
      * @param $class
-     * @return StorageInterface
+     * @return BaseSearch
      */
     public function createParserStorage(ContainerInterface $container, $serviceConfig, $class): StorageInterface
     {
@@ -37,10 +37,10 @@ class SearchFactory extends BaseStorageFactory
 
     protected function validateClass($class)
     {
-        if (!is_a($class, Search::class, true)) {
+        if (!is_a($class, BaseSearch::class, true)) {
             throw new InvalidArgumentException(sprintf(
-                'Expected class %, given %s',
-                Search::class,
+                'Expected class %s, given %s',
+                BaseSearch::class,
                 is_object($class) ? get_class($class) : gettype($class)
             ));
         }

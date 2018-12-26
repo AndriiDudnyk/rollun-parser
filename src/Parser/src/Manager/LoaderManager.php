@@ -61,6 +61,7 @@ class LoaderManager
         }
 
         $this->logger->info("Loader start task #{$task['id']}");
+        $status = null;
 
         try {
             $loader = $this->getLoader($task['options']);
@@ -80,12 +81,12 @@ class LoaderManager
             $this->logger->info("Loader failed task #{$task['id']}", [
                 'exception' => $clientExc,
             ]);
-        } finally {
-            $this->taskDataStore->update([
-                'id' => $task['id'],
-                'status' => $status,
-            ]);
         }
+
+        $this->taskDataStore->update([
+            'id' => $task['id'],
+            'status' => $status,
+        ]);
     }
 
     protected function getLoader($options): LoaderInterface

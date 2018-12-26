@@ -49,6 +49,5 @@ require 'vendor/autoload.php';
     }
 
     $container->setService(LifeCycleToken::class, $lifeCycleToken);
-
     $app->run();
 })();

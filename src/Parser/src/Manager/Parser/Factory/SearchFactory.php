@@ -11,7 +11,7 @@ use InvalidArgumentException;
 use Parser\Manager\Parser\BaseManager;
 use Parser\Manager\Parser\Search\Simple;
 
-class SearchParserManagerFactory extends BaseParserManagerFactory
+class SearchFactory extends BaseFactory
 {
     const KEY_TASK_DATASTORE = 'taskDataStore';
 

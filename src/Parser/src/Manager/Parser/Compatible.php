@@ -7,9 +7,23 @@
 namespace Parser\Manager\Parser;
 
 use InvalidArgumentException;
+use Parser\DataStore\Document;
+use Parser\Parser\Compatible as CompatibleParser;
+use Psr\Log\LoggerInterface;
+use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 
 class Compatible extends BaseManager
 {
+    public function __construct(
+        CompatibleParser $parser,
+        DataStoresInterface $parseResultDataStore,
+        Document $documentDataStore,
+        array $options,
+        LoggerInterface $logger = null
+    ) {
+        parent::__construct($parser, $parseResultDataStore, $documentDataStore, $options);
+    }
+
     protected function saveResult(array $uris)
     {
         if (!$productId = $this->options['productId'] ?? null) {

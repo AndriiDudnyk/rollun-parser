@@ -4,17 +4,18 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser\DataStore\Storage;
+namespace Parser\DataStore\Storage\Search;
 
+use Parser\DataStore\Storage\BaseStorage;
 use Parser\Loader\Loader;
 use Parser\Loader\SearchLoaderHelper;
-use Parser\Parser\Search\Simple as SimpleSearch;
+use Parser\Parser\ParserInterface;
 
-class Search extends BaseStorage
+class BaseSearch extends BaseStorage
 {
     protected $searchLoaderHelper;
 
-    public function __construct(Loader $loader, SimpleSearch $parser, SearchLoaderHelper $searchLoaderHelper)
+    public function __construct(Loader $loader, ParserInterface $parser, SearchLoaderHelper $searchLoaderHelper)
     {
         $this->searchLoaderHelper = $searchLoaderHelper;
         parent::__construct($loader, $parser);

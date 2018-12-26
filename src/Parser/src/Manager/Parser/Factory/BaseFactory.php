@@ -13,7 +13,7 @@ use Parser\Parser\ParserInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use Parser\Manager\Parser\BaseManager;
 
-class BaseParserManagerFactory extends AbstractParserManagerFactory
+class BaseFactory extends AbstractFactory
 {
     const KEY_PARSER = 'parser';
 
