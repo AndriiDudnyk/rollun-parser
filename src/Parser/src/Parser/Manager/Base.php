@@ -67,10 +67,11 @@ abstract class Base implements ParserManagerInterface
         $status = null;
 
         try {
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_IN_PROCESS);
             $records = $this->parser->parse($parserTask['document']);
 
             if ($records) {
-                $records = $this->processResult($records);
+                $records = $this->processResult($records, $parserTask);
                 $this->saveResult($records);
                 $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_SUCCESS);
             } else {
@@ -85,9 +86,9 @@ abstract class Base implements ParserManagerInterface
         }
     }
 
-    protected function processResult(array $records): array
+    protected function processResult(array $data, $parserTask): array
     {
-        return $records;
+        return $data;
     }
 
     abstract protected function saveResult(array $records);

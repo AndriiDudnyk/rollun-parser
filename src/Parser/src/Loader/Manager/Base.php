@@ -15,6 +15,10 @@ use rollun\parser\DataStore\Entity\ParserTaskInterface;
 use rollun\parser\Loader\Loader\LoaderInterface;
 use rollun\parser\Parser\Manager\ParserManagerInterface;
 use RuntimeException;
+use rollun\datastore\Rql\RqlQuery;
+use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
+use Xiag\Rql\Parser\Node\Query\LogicOperator\OrNode;
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 
 class Base implements LoaderManagerInterface
 {
@@ -23,6 +27,8 @@ class Base implements LoaderManagerInterface
     protected $parserTask;
 
     protected $loaderTask;
+
+    protected $parserNames;
 
     /**
      * @var LoggerInterface
@@ -34,6 +40,7 @@ class Base implements LoaderManagerInterface
      * @param LoaderInterface $loader
      * @param LoaderTaskInterface $loaderTask
      * @param ParserTaskInterface $parserTask
+     * @param array $parserNames
      * @param LoggerInterface|null $logger
      * @throws ReflectionException
      */
@@ -41,9 +48,11 @@ class Base implements LoaderManagerInterface
         LoaderInterface $loader,
         LoaderTaskInterface $loaderTask,
         ParserTaskInterface $parserTask,
+        array $parserNames,
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(["logger" => LoggerInterface::class]);
+        $this->parserNames = $parserNames;
         $this->loader = $loader;
         $this->loaderTask = $loaderTask;
         $this->parserTask = $parserTask;
@@ -65,7 +74,7 @@ class Base implements LoaderManagerInterface
         $status = null;
 
         try {
-            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_SUCCESS);
+            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_IN_PROCESS);
             $document = $this->getDocument($loaderTask);
             $this->processResult($loaderTask, $document);
 
@@ -109,15 +118,23 @@ class Base implements LoaderManagerInterface
         return $loader;
     }
 
-    protected function getNewLoaderTask($parserName = null): ?array
+    protected function getNewLoaderTask(): ?array
     {
-        $fields[LoaderTaskInterface::COLUMN_STATUS] = LoaderTaskInterface::STATUS_NEW;
+        $eqNodes = [];
 
-        if ($parserName) {
-            $fields[LoaderTaskInterface::COLUMN_PARSER_NAME] = $parserName;
+        foreach ($this->parserNames as $parserName) {
+            $eqNodes[] = new EqNode(LoaderTaskInterface::COLUMN_PARSER_NAME, $parserName);
         }
 
-        $tasks = $this->loaderTask->getLoaderTaskByFields($fields);
+        $parserOrNode = new OrNode($eqNodes);
+
+        $query = new RqlQuery();
+        $query->setQuery(new AndNode([
+            new EqNode(LoaderTaskInterface::COLUMN_STATUS, LoaderTaskInterface::STATUS_NEW),
+            $parserOrNode
+        ]));
+
+        $tasks = $this->loaderTask->query($query);
 
         if (!count($tasks)) {
             return null;
@@ -132,7 +149,7 @@ class Base implements LoaderManagerInterface
 
     public function __sleep()
     {
-        return ['parserTask', 'loaderTask', 'loader'];
+        return ['parserTask', 'loaderTask', 'loader', 'parserNames'];
     }
 
     public function __wakeup()

@@ -38,7 +38,7 @@ abstract class JsonAspect extends AspectAbstract
     protected function postProcessJsonFields($result)
     {
         foreach ($this->getJsonFields() as $jsonField) {
-            if (isset($result[$jsonField])) {
+            if (isset($result[$jsonField]) && $result[$jsonField]) {
                 $result[$jsonField] = Coder::jsonDecode($result[$jsonField]);
             }
         }

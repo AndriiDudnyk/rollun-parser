@@ -26,14 +26,14 @@ class PageDetector extends AbstractPage
         $params = $this->parseQuery($query);
         $this->validate($params, ['uri']);
 
-        $storage = $this->createStorage($params['uri']);
+        $page = $this->createPage($params['uri']);
 
-        return $storage->query($query);
+        return $page->query($query);
     }
 
-    public function createStorage($uri): PageInterface
+    public function createPage($uri): PageInterface
     {
-        $storageService = $this->getStorageService($uri);
+        $storageService = $this->getPageService($uri);
 
         if (!$this->storagePluginManager->has($storageService)) {
             throw new InvalidArgumentException("Storage '$storageService' not found");
@@ -42,7 +42,7 @@ class PageDetector extends AbstractPage
         return $this->storagePluginManager->get($storageService);
     }
 
-    public function getStorageService($uri): string
+    public function getPageService($uri): string
     {
         $parserStorage = [];
 

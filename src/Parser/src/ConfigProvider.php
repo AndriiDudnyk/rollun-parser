@@ -13,11 +13,14 @@ use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\DataStore\Entity\ParserTask;
 use rollun\parser\DataStore\Entity\ParserTaskFactory;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;
+use rollun\parser\DataStore\Page\Factory\PagePluginManagerFactory;
+use rollun\parser\DataStore\Page\PageDetector;
+use rollun\parser\DataStore\Page\PageDetectorFactory;
+use rollun\parser\DataStore\Page\PagePluginManager;
 use rollun\parser\Loader\Loader\LoaderAbstractFactory;
 use rollun\parser\Loader\Loader\LoaderInterface;
-use rollun\parser\Loader\Manager\Base as BaseLoaderManager;
-use rollun\parser\Loader\Manager\BaseFactory as BaseLoaderManagerFactory;
 use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface as ProxyEntityStoreInterface;
+use Zend\Cache\Service\PatternPluginManagerFactory;
 
 class ConfigProvider
 {
@@ -30,16 +33,19 @@ class ConfigProvider
                 ],
                 'factories' => [
                     ParserTask::class => ParserTaskFactory::class,
-                    BaseLoaderManager::class => BaseLoaderManagerFactory::class
+                    PageDetector::class => PageDetectorFactory::class,
+                    PagePluginManager::class => PagePluginManagerFactory::class
                 ],
                 'abstract_factories' => [
                     LoaderAbstractFactory::class,
                 ],
                 'aliases' => [
+                    'page-detector' => PageDetector::class,
+
                     ParserTaskInterface::class => ParserTask::class,
                     LoaderTaskInterface::class => __NAMESPACE__ . 'aspectLoaderTaskDataStore',
                     LoaderInterface::class => __NAMESPACE__ . 'baseLoader',
-                ]
+                ],
             ],
             LoaderAbstractFactory::class => [
                 __NAMESPACE__ . 'baseLoader' => [
@@ -54,13 +60,8 @@ class ConfigProvider
                     ],
                 ],
             ],
-            BaseLoaderManagerFactory::class => [
-                BaseLoaderManagerFactory::KEY_LOADER => LoaderInterface::class,
-                BaseLoaderManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskInterface::class,
-                BaseLoaderManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskInterface::class,
-            ],
             ParserTaskFactory::class => [
-                ParserTaskFactory::KEY_PARSER_TASK_DATASTORE =>  __NAMESPACE__ . 'parserTaskDataStore',
+                ParserTaskFactory::KEY_PARSER_TASK_DATASTORE => __NAMESPACE__ . 'parserTaskDataStore',
                 ParserTaskFactory::KEY_STORE_DIR => 'data/documents',
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [

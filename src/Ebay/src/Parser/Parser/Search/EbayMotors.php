@@ -22,6 +22,10 @@ class EbayMotors extends HtmlParser
         foreach ($itemCards as $key => $itemCard) {
             $pq = pq($itemCard);
 
+            if ($pq->find('.kand-expansion')->count()) {
+                continue;
+            }
+
             $products[$key]['url'] = $pq->find('.lvtitle a')->attr('href');
             $urlComponents = parse_url($products[$key]['url']);
             $path = $urlComponents['path'];
@@ -35,7 +39,7 @@ class EbayMotors extends HtmlParser
                 [$from, ,$to] = explode(' ', $priceRange);
                 $products[$key]['price'] = trim($from) . '-' . trim($to);
             } else {
-                $products[$key]['price'] = trim($pq->find('.lvprice span')->text());
+                $products[$key]['price'] = trim($pq->find('.lvprice > span')->text());
             }
 
             $products[$key]['shipping']['cost'] = trim($pq->find('.lvshipping .fee')->text());
@@ -51,7 +55,7 @@ class EbayMotors extends HtmlParser
 
             $sellerInfo = trim($pq->find('.lvdetails li')->eq(2)->text());
             preg_match('/Seller:\s+([\w\W]+)\(.+\)/', $sellerInfo, $matches);
-            $products[$key]['seller'] = $matches[1];
+            $products[$key]['seller'] = $matches[1] ?? '';
 
             $hotnessText = trim($pq->find('.watch a')->text());
 

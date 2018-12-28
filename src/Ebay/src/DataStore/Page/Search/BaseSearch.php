@@ -24,7 +24,8 @@ class BaseSearch extends Base
     public function executeQuery($params)
     {
         $this->loader->setOptions([
-            LoaderInterface::COOKIES_OPTION => $this->searchPage->getCookie($params['uri'])
+            LoaderInterface::COOKIES_OPTION => $this->searchPage->getCookies($params['uri']),
+            LoaderInterface::COOKIE_DOMAIN_OPTION => $this->searchPage->getCookieDomain($params['uri']),
         ]);
 
         $trueUri = $this->searchPage->getTrueUri($params['uri']);

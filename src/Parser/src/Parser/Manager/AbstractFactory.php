@@ -44,16 +44,21 @@ abstract class AbstractFactory
             $class = $requestedName;
         }
 
-        if (!is_a($class, Base::class, true)) {
+        $this->checkClass($class);
+
+        return $class;
+    }
+
+    protected function checkClass($class)
+    {
+        if (!is_a($class, ParserManagerInterface::class, true)) {
             throw new InvalidArgumentException(
                 sprintf(
                     'Expected class %, given %s',
-                    Base::class,
+                    ParserManagerInterface::class,
                     is_object($class) ? get_class($class) : gettype($class)
                 )
             );
         }
-
-        return $class;
     }
 }

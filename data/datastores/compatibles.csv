@@ -1,1 +1,2 @@
-id,product_id,make,model,submodel,year,created_at
+id,item_id,make,model,submodel,year,created_at
+

@@ -16,6 +16,8 @@ class SearchPage
 
     protected $requestFactory;
 
+    protected $response;
+
     protected $client;
 
     public function __construct(ClientInterface $client, ServerRequestFactoryInterface $requestFactory, $redirectedUri)
@@ -30,10 +32,20 @@ class SearchPage
         return $this->redirectedUri . urlencode($uri);
     }
 
-    public function getCookie(string $uri): array
+    protected function getResponse($uri)
     {
         $request = $this->requestFactory->createServerRequest('GET', $uri);
-        $response = $this->client->sendRequest($request);
+
+        if ($this->response == null) {
+            $this->response = $this->client->sendRequest($request);
+        }
+
+        return $this->response;
+    }
+
+    public function getCookies(string $uri): array
+    {
+        $response = $this->getResponse($uri);
         $cookies = [];
 
         foreach ($response->getHeader('Set-Cookie') as $cookie) {
@@ -42,5 +54,18 @@ class SearchPage
         }
 
         return $cookies;
+    }
+
+    public function getCookieDomain($uri)
+    {
+        $response = $this->getResponse($uri);
+        $cookieDomain = '';
+
+        foreach ($response->getHeader('Set-Cookie') as $cookie) {
+            $cookie = SetCookie::fromString($cookie);
+            $cookieDomain = $cookie->getDomain();
+        }
+
+        return $cookieDomain;
     }
 }

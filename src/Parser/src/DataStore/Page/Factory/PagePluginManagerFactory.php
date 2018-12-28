@@ -9,7 +9,7 @@ namespace rollun\parser\DataStore\Page\Factory;
 use Psr\Container\ContainerInterface;
 use rollun\parser\DataStore\Page\PagePluginManager;
 
-class StoragePluginManagerFactory
+class PagePluginManagerFactory
 {
     public function __invoke(ContainerInterface $container)
     {

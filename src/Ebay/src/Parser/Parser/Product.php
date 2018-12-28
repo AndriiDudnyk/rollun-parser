@@ -25,30 +25,39 @@ class Product extends HtmlParser
         $parts = parse_url($sellerUrl);
         parse_str($parts['query'], $sellerId);
 
-        $products['title'] = $document->find('.it-ttl')->text();
+        $product['title'] = $document->find('.it-ttl')->text();
 
         if ($document->find('#vi-cdown_timeLeft')->count()) {
-            $products['price'] = $document->find('#prcIsum_bidPrice')->text();
+            $product['price'] = $document->find('#prcIsum_bidPrice')->text();
         } else {
-            $products['price'] = $document->find('#prcIsum')->text();
+            $product['price'] = $document->find('#prcIsum')->text();
         }
 
-        $products['shipping']['cost'] = $document->find('#fshippingCost>span')->text();
-        $products['shipping']['service'] = $document->find('#fShippingSvc')->text();
+        $product['seller'] = trim($document->find('#RightSummaryPanel .mbg-nw')->text());
+
+        $product['shipping']['cost'] = trim($document->find('#fshippingCost>span')->text());
+        $product['shipping']['service'] = trim($document->find('#fShippingSvc')->text());
 
         $catLine = $document->find('.vi-VR-brumb-hasNoPrdlnks li a span');
-        $products['category'] = '';
+        $product['category'] = '';
 
         foreach ($catLine as $cat) {
             $pq = pq($cat);
-            $products['category'] .= '>' . $pq->text();
+            $product['category'] .= '>' . $pq->text();
         }
 
         $itemImages = $document->find('#mainImgHldr>img');
 
         foreach ($itemImages as $img) {
             $pq = pq($img);
-            $products['imgs'][] = $pq->attr('src');
+            $product['imgs'][] = $pq->attr('src');
+        }
+
+        if ($document->find('.pLftB div')->count()) {
+            [, , , $ebayId] = explode(' ', trim($document->find('.pLftB div')->text()));
+            $product['ebay_id'] = str_replace('EPID', '', $ebayId);
+        } else {
+            $product['ebay_id'] = '';
         }
 
         $itemSpecs = $document->find('.itemAttr tr');
@@ -68,8 +77,8 @@ class Product extends HtmlParser
             }
         }
 
-        $products['specs'] = $specs;
+        $product['specs'] = $specs;
 
-        return $products;
+        return $product;
     }
 }

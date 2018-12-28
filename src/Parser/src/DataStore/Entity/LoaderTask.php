@@ -6,9 +6,6 @@
 
 namespace rollun\parser\DataStore\Entity;
 
-use rollun\datastore\Rql\RqlQuery;
-use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use rollun\parser\DataStore\JsonAspect;
 
 class LoaderTask extends JsonAspect implements LoaderTaskInterface
@@ -56,25 +53,5 @@ class LoaderTask extends JsonAspect implements LoaderTaskInterface
             'id' => $id,
             'status' => $status,
         ]);
-    }
-
-    /**
-     * @param $fields
-     * @return array|iterable|[]
-     */
-    public function getLoaderTaskByFields($fields)
-    {
-        $eqNodes = [];
-
-        foreach ($fields as $field => $value) {
-            if (is_scalar($value)) {
-                $eqNodes[] = new EqNode($field, $value);
-            }
-        }
-
-        $query = new RqlQuery();
-        $query->setQuery(new AndNode($eqNodes));
-
-        return $this->query($query);
     }
 }

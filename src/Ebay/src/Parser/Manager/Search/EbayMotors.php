@@ -10,13 +10,13 @@ use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
 use Psr\Log\LoggerInterface;
-use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\ProductSearchInterface;
+use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\ProductInterface;
 
 class EbayMotors extends Base
 {
     public function __construct(
         EbayMotorsSearchParser $parser,
-        ProductSearchInterface $entity,
+        ProductInterface $entity,
         ParserTaskInterface $parserTask,
         LoaderTaskInterface $loaderTask,
         array $options,

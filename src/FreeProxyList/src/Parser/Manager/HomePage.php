@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\service\Parser\FreeProxyList\Manager\Parser;
+namespace rollun\service\Parser\FreeProxyList\Parser\Manager;
 
 use Psr\Log\LoggerInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;

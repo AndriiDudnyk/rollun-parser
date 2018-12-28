@@ -29,10 +29,4 @@ interface LoaderTaskInterface extends PageInterface
      * @return void
      */
     public function setStatus($id, $status);
-
-    /**
-     * @param $fields
-     * @return array|iterable
-     */
-    public function getLoaderTaskByFields($fields);
 }

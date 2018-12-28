@@ -22,9 +22,18 @@ class HomePage extends HtmlParser
 
         foreach ($proxiesTr as $tr) {
             $pq = pq($tr);
-            $host = $pq->find('td')->eq(0)->text();
-            $port = $pq->find('td')->eq(1)->text();
-            $isHttp = $pq->find('td')->eq(6)->text();
+
+            $country = trim($pq->find('td')->eq(3)->text());
+
+            if ($country != 'United States') {
+                continue;
+            }
+
+            $host = trim($pq->find('td')->eq(0)->text());
+            $port = trim($pq->find('td')->eq(1)->text());
+            $isHttp = trim($pq->find('td')->eq(6)->text());
+
+
 
             $scheme = $isHttp == 'yes' ? 'https' : 'http';
 

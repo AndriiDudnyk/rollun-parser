@@ -12,6 +12,8 @@ interface ProductInterface extends DataStoresInterface
 {
     const COLUMN_TITLE = 'title';
     const COLUMN_PRICE = 'price';
+    const COLUMN_WATCH = 'watch';
+    const COLUMN_SOLD = 'sold';
     const COLUMN_SHIPPING = 'shipping';
     const COLUMN_CATEGORY = 'category';
     const COLUMN_IMGS = 'imgs';

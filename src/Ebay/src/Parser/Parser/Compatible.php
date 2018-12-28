@@ -16,17 +16,22 @@ class Compatible extends JsonParser
     {
         $data = json_decode($data, true);
 
-        $compatibles = $data['data'];
+        $compatibleItems = $data['data'];
+        $compatibles = [];
         $result = [];
 
-        foreach ($compatibles as $compatible) {
-            $result[] = [
+        foreach ($compatibleItems as $compatible) {
+            $compatibles[] = [
                 'make' => $compatible['Make'][0] ?? '',
                 'model' => $compatible['Model'][0] ?? '',
                 'submodel' => $compatible['Submodel'][0] ?? '',
                 'year' => $compatible['Year'][0] ?? '',
             ];
         }
+
+        $result['compatibles'] = $compatibles;
+        $result['currentPageNo'] = $data['pageInfo']['currentPageNo'] ?? null;
+        $result['totalPageCount'] = $data['pageInfo']['totalPageCount'] ?? null;
 
         return $result;
     }

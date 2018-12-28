@@ -8,11 +8,12 @@ namespace rollun\service\Parser\Ebay\Parser\Manager\Factory;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
+use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\Parser\Manager\BaseFactory;
 use rollun\parser\Parser\Manager\ParserManagerInterface;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\Base as BaseSearchParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\Product as ProductParserManager;
 
-class SearchFactory extends BaseFactory
+class ProductFactory extends BaseFactory
 {
     const KEY_LOADER_TASK_DATASTORE = 'taskDataStore';
 
@@ -24,24 +25,28 @@ class SearchFactory extends BaseFactory
         $parser = $this->createParser($container, $serviceConfig);
         $parseResultDataStore = $this->createParseResultDataStore($container, $serviceConfig);
         $documentDataStore = $this->createParserTask($container, $serviceConfig);
+        $loaderTaskDataStore = $this->getLoaderTaskDataStore($container, $serviceConfig);
+        $options = $this->getOptions($serviceConfig);
 
+        return new $class($parser, $parseResultDataStore, $documentDataStore, $loaderTaskDataStore, $options);
+    }
+
+    protected function getLoaderTaskDataStore(ContainerInterface $container, array $serviceConfig): LoaderTaskInterface
+    {
         if (!isset($serviceConfig[static::KEY_LOADER_TASK_DATASTORE])) {
             throw new InvalidArgumentException("Invalid option '" . self::KEY_LOADER_TASK_DATASTORE . "'");
         }
 
-        $taskDataStore = $container->get($serviceConfig[static::KEY_LOADER_TASK_DATASTORE]);
-        $options = $this->getOptions($serviceConfig);
-
-        return new $class($parser, $parseResultDataStore, $documentDataStore, $taskDataStore, $options);
+        return $container->get($serviceConfig[static::KEY_LOADER_TASK_DATASTORE]);
     }
 
     protected function checkClass($class)
     {
-        if (!is_a($class, BaseSearchParserManager::class, true)) {
+        if (!is_a($class, ProductParserManager::class, true)) {
             throw new InvalidArgumentException(
                 sprintf(
                     'Expected class %, given %s',
-                    BaseSearchParserManager::class,
+                    ProductParserManager::class,
                     is_object($class) ? get_class($class) : gettype($class)
                 )
             );

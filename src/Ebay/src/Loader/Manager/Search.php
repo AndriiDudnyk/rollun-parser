@@ -24,9 +24,10 @@ class Search extends BaseLoaderManager
         LoaderTaskInterface $loaderTask,
         ParserTaskInterface $parserTask,
         SearchPageHelper $searchPageHelper,
+        array $parserNames,
         LoggerInterface $logger = null
     ) {
-        parent::__construct($loader, $loaderTask, $parserTask);
+        parent::__construct($loader, $loaderTask, $parserTask, $parserNames);
         $this->searchPageHelper = $searchPageHelper;
     }
 
@@ -38,11 +39,21 @@ class Search extends BaseLoaderManager
      */
     protected function getDocument($loaderTask)
     {
+        $trueUri = $this->searchPageHelper->getTrueUri($loaderTask['uri']);
+        $options = array_merge($loaderTask['options'], [
+            LoaderInterface::COOKIES_OPTION => $this->searchPageHelper->getCookies($loaderTask['uri']),
+            LoaderInterface::COOKIE_DOMAIN_OPTION => $this->searchPageHelper->getCookieDomain($loaderTask['uri']),
+        ]);
 
-
-        $loader = $this->getLoader($loaderTask['options']);
-        $document = $loader->load($loaderTask['uri']) ?? '';
+        $loader = $this->getLoader($options);
+        $document = $loader->load($trueUri) ?? '';
 
         return $document;
+    }
+
+    public function __sleep()
+    {
+        $properties = parent::__sleep();
+        return array_merge($properties, ['searchPageHelper']);
     }
 }
