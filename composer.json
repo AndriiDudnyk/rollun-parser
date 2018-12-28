@@ -67,7 +67,9 @@
   },
   "autoload": {
     "psr-4": {
-      "Parser\\": "src/Parser/src"
+      "rollun\\parser\\": "src/Parser/src",
+      "rollun\\service\\Parser\\Ebay\\": "src/Ebay/src",
+      "rollun\\service\\Parser\\FreeProxyList\\": "src/FreeProxyList/src"
     }
   },
   "autoload-dev": {

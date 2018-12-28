@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace Parser;
+namespace rollun\parser;
 
 use InvalidArgumentException;
 
@@ -152,7 +152,9 @@ class UserAgentGenerator
             'Nexus :number5-9: Build/[LMY48B|LRX22C]',
             '[|SAMSUNG ]SM-G9[28|25|20][X|FD|8|F|F-ORANGE|FG|FQ|H|I|L|M|S|T] Build/[LRX22G|LMY47X]',
             '[|SAMSUNG ]SM-G9[35|350][X|FD|8|F|F-ORANGE|FG|FQ|H|I|L|M|S|T] Build/[MMB29M|LMY47X]',
-            '[MOTOROLA |][MOTO G|MOTO G XT1068|XT1021|MOTO E XT1021|MOTO XT1580|MOTO X FORCE XT1580|MOTO X PLAY XT1562|MOTO XT1562|MOTO XT1575|MOTO X PURE XT1575|MOTO XT1570 MOTO X STYLE] Build/[LXB22|LMY47Z|LPC23|LPK23|LPD23|LPH223]',
+            '[MOTOROLA |][MOTO G|MOTO G XT1068|XT1021|MOTO E XT1021|MOTO XT1580|MOTO X FORCE XT1580|'
+            . 'MOTO X PLAY XT1562|MOTO XT1562|MOTO XT1575|MOTO X PURE XT1575|MOTO XT1570 MOTO X STYLE]'
+            . ' Build/[LXB22|LMY47Z|LPC23|LPK23|LPD23|LPH223]',
         ],
         '6.0' => [
             '[SAMSUNG |]SM-[G|D][920|925|928|9350][V|F|I|L|M|S|8|I] Build/[MMB29K|MMB29V|MDB08I|MDB08L]',
@@ -206,13 +208,7 @@ class UserAgentGenerator
     {
         $_os = [];
         if ($os === null || in_array($os, ['chrome', 'firefox', 'explorer'])) {
-            $_os = $os === 'explorer'
-                ? $this->windowsOS
-                : array_merge(
-                    $this->windowsOS,
-                    $this->linuxOS,
-                    $this->macOS
-                );
+            $_os = $os === 'explorer' ? $this->windowsOS : array_merge($this->windowsOS, $this->linuxOS, $this->macOS);
         } else {
             $_os += $this->{$os . 'OS'};
         }
@@ -277,13 +273,9 @@ class UserAgentGenerator
      */
     protected static function processRandomNumbers($selected_os)
     {
-        return preg_replace_callback(
-            '/:number(\d+)-(\d+):/i',
-            function ($matches) {
-                return rand($matches[1], $matches[2]);
-            },
-            $selected_os
-        );
+        return preg_replace_callback('/:number(\d+)-(\d+):/i', function ($matches) {
+            return rand($matches[1], $matches[2]);
+        }, $selected_os);
     }
 
     /**
@@ -292,15 +284,11 @@ class UserAgentGenerator
      */
     protected static function processSpinSyntax($selected_os)
     {
-        return preg_replace_callback(
-            '/\[([\w\-\s|;]*?)\]/i',
-            function ($matches) {
-                $shuffle = explode('|', $matches[1]);
+        return preg_replace_callback('/\[([\w\-\s|;]*?)\]/i', function ($matches) {
+            $shuffle = explode('|', $matches[1]);
 
-                return $shuffle[array_rand($shuffle)];
-            },
-            $selected_os
-        );
+            return $shuffle[array_rand($shuffle)];
+        }, $selected_os);
     }
 
     /**
@@ -311,13 +299,9 @@ class UserAgentGenerator
     {
         $this->androidVersion = $version = $this->androidVersions[array_rand($this->androidVersions)];
 
-        return preg_replace_callback(
-            '/:androidVersion:/i',
-            function ($matches) use ($version) {
-                return $version;
-            },
-            $os
-        );
+        return preg_replace_callback('/:androidVersion:/i', function ($matches) use ($version) {
+            return $version;
+        }, $os);
     }
 
     /**
@@ -331,13 +315,9 @@ class UserAgentGenerator
 
         $device = self::processSpinSyntax($device);
 
-        return preg_replace_callback(
-            '/:androidDevice:/i',
-            function ($matches) use ($device) {
-                return $device;
-            },
-            $selected_os
-        );
+        return preg_replace_callback('/:androidDevice:/i', function ($matches) use ($device) {
+            return $device;
+        }, $selected_os);
     }
 
     /**
@@ -390,6 +370,7 @@ class UserAgentGenerator
                 return $this->createRandomChromeUserAgent($agent);
             case 'firefox':
                 $os = $this->getOS($agent);
+
                 return $this->createRandomFirefoxUserAgent($os);
             case 'explorer':
                 return $this->createRandomExplorerUserAgent();
@@ -399,6 +380,7 @@ class UserAgentGenerator
             case 'ipad':
             case 'ipod':
                 $os = $this->getMobileOS($agent);
+
                 return $this->createRandomMobileUserAgent($os);
         }
 

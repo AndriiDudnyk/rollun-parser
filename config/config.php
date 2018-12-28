@@ -51,7 +51,9 @@ $aggregator = new ConfigAggregator([
     \rollun\callback\ConfigProvider::class,
 
     // Default App module config
-    Parser\ConfigProvider::class,
+    \rollun\parser\ConfigProvider::class,
+    \rollun\service\Parser\Ebay\ConfigProvider::class,
+    \rollun\service\Parser\FreeProxyList\ConfigProvider::class,
 
     // Default App module config
     // Load application config in a pre-defined order in such a way that local settings
