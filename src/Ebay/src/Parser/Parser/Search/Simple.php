@@ -26,13 +26,13 @@ class Simple extends HtmlParser
         foreach ($itemCards as $key => $itemCard) {
             $pq = pq($itemCard);
 
-            $products[$key]['url'] = $pq->find('.s-item__link')->attr('href');
-            $urlComponents = parse_url($products[$key]['url']);
+            $products[$key]['uri'] = $pq->find('.s-item__link')->attr('href');
+            $urlComponents = parse_url($products[$key]['uri']);
             $path = $urlComponents['path'];
             $parts = explode('/', $path);
 
             $products[$key]['item_id'] = end($parts);
-            $products[$key]['img'] = $pq->find('.s-item__image-img')->attr('src');
+            $products[$key]['imgs'] = $pq->find('.s-item__image-img')->attr('src');
             $products[$key]['price'] = $pq->find('span.s-item__price')->text();
             $products[$key]['shipping']['cost'] = $pq->find('.s-item__shipping')->text();
 

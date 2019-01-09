@@ -1,6 +1,0 @@
-id,parser,uri,created_at,options,status
-5c23aa26b58e1,ebayMotorsSearch,https://www.ebay.com/sch/m.html?_odkw=JT+Sprockets&LH_PrefLoc=2&_ssn=powersportsuperstore&_osacat=0&_from=R40&_trksid=p2046732.m570.l1313.TR11.TRC2.A0.H0.Xjt.TRS1&_nkw=jt&_sacat=0,1545841190,{},1
-5c264ef490400,ebayProduct,https://www.ebay.com/itm/323511525598,1546014452,"{""options"":{""parserManagerOptions"":{""item_id"":""323511525598""}}}",1
-5c264ef4909a2,ebayProduct,https://www.ebay.com/itm/332850245625,1546014452,"{""options"":{""parserManagerOptions"":{""item_id"":""332850245625""}}}",1
-5c2657d539d72,ebayCompatible,https://frame.ebay.com/ebaymotors/ws/eBayISAPI.dll?GetFitmentData&req=1&cid=177773&ct=100&page=1&pid=171261706,1546016725,"{""parserManagerOptions"":{""item_id"":""332850245625"",""compatible_uri"":""https:\/\/frame.ebay.com\/ebaymotors\/ws\/eBayISAPI.dll?GetFitmentData&req=1&cid=177773&ct=100&page=1&pid=171261706""}}",1
-5c265aa2b0d9c,ebayCompatible,https://frame.ebay.com/ebaymotors/ws/eBayISAPI.dll?GetFitmentData&req=1&cid=177773&ct=100&page=2&pid=171261706,1546017442,"{""parserManagerOptions"":{""item_id"":""332850245625"",""compatible_uri"":""https:\/\/frame.ebay.com\/ebaymotors\/ws\/eBayISAPI.dll?GetFitmentData&req=1&cid=177773&ct=100&page=2&pid=171261706""}}",1

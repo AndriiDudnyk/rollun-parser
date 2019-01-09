@@ -15,18 +15,4 @@ class Product extends JsonAspect implements ProductInterface
     {
         return ['specs', 'shipping', 'imgs'];
     }
-
-    public function create($itemData, $rewriteIfExist = false)
-    {
-        $itemData['created_at'] = time();
-
-        return parent::create($itemData, $rewriteIfExist);
-    }
-
-    public function update($itemData, $createIfAbsent = false)
-    {
-        unset($itemData['created_at']);
-
-        return parent::update($itemData, $createIfAbsent);
-    }
 }

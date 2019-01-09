@@ -26,13 +26,13 @@ class EbayMotors extends HtmlParser
                 continue;
             }
 
-            $products[$key]['url'] = $pq->find('.lvtitle a')->attr('href');
-            $urlComponents = parse_url($products[$key]['url']);
+            $products[$key]['uri'] = $pq->find('.lvtitle a')->attr('href');
+            $urlComponents = parse_url($products[$key]['uri']);
             $path = $urlComponents['path'];
             $parts = explode('/', $path);
 
             $products[$key]['item_id'] = end($parts);
-            $products[$key]['img'] = $pq->find('.full-width a .img')->attr('src');
+            $products[$key]['imgs'] = $pq->find('.full-width a .img')->attr('src');
 
             if ($pq->find('.prRange')->count()) {
                 $priceRange = $pq->find('.prRange')->text();

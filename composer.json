@@ -39,6 +39,7 @@
   "require": {
     "php": "^7.1",
     "ext-json": "*",
+    "ext-openssl": "*",
     "psr/http-client": "^1.0",
     "rollun-com/rollun-callback": "^5.0",
     "rollun-com/rollun-datastore": "^6",

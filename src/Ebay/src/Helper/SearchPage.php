@@ -34,10 +34,8 @@ class SearchPage
 
     protected function getResponse($uri)
     {
-        $request = $this->requestFactory->createServerRequest('GET', $uri);
-
         if ($this->response == null) {
-            $this->response = $this->client->sendRequest($request);
+            $this->response = $this->client->sendRequest($this->requestFactory->createServerRequest('GET', $uri));
         }
 
         return $this->response;

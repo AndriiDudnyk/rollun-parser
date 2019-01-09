@@ -44,7 +44,6 @@ return [
                         'formatter' => ContextToString::class,
                     ],
                 ],
-
 //                [
 //                    'name' => Stream::class,
 //                    'options' => [
