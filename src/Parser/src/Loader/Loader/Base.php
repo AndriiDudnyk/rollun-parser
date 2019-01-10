@@ -17,7 +17,6 @@ use ReflectionException;
 use rollun\dic\InsideConstruct;
 use rollun\parser\UserAgentGenerator;
 use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface;
-use RuntimeException;
 
 class Base implements LoaderInterface
 {
@@ -79,7 +78,7 @@ class Base implements LoaderInterface
         $response = $this->sendRequest($request);
 
         if ($response->getStatusCode() != 200) {
-            throw new RuntimeException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
+            throw new LoaderException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
         }
 
         return $response->getBody()->getContents();
@@ -139,8 +138,7 @@ class Base implements LoaderInterface
             self::DEF_CREATE_TASK_IF_NO_PROXIES;
 
         if (!$newProxyUri = $this->proxyDataStore->getUnusedProxy($createTaskIfNoExist)) {
-            $addMessage = $createTaskIfNoExist ? ', and add new task for proxy parser' : '';
-            throw new RuntimeException("Unused proxies run out" . $addMessage);
+            throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
         }
 
         $this->logger->debug("Change proxy '{$oldProxyUri}' on '{$newProxyUri}'");

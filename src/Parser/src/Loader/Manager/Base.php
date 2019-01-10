@@ -12,9 +12,9 @@ use ReflectionException;
 use rollun\dic\InsideConstruct;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;
+use rollun\parser\Loader\Loader\LoaderException;
 use rollun\parser\Loader\Loader\LoaderInterface;
 use rollun\parser\Parser\Manager\ParserManagerInterface;
-use RuntimeException;
 use rollun\datastore\Rql\RqlQuery;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\OrNode;
@@ -81,10 +81,16 @@ class Base implements LoaderManagerInterface
             $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_SUCCESS);
 
             $this->logger->info("Loader successfully finish task #{$loaderTask['id']}");
-        } catch (RuntimeException | ClientExceptionInterface $clientExc) {
-            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_FAILED);
+        } catch (LoaderException | ClientExceptionInterface $e) {
+            if ($e instanceof LoaderException) {
+                $status = $e->getCode();
+            } else {
+                $status = LoaderTaskInterface::STATUS_FAILED;
+            }
+
+            $this->loaderTask->setStatus($loaderTask['id'], $status);
             $this->logger->info("Loader failed task #{$loaderTask['id']}", [
-                'exception' => $clientExc,
+                'exception' => $e,
             ]);
         }
     }
@@ -93,7 +99,7 @@ class Base implements LoaderManagerInterface
      * @param $loaderTask
      * @return string
      * @throws ClientExceptionInterface
-     * @throws RuntimeException
+     * @throws LoaderException
      */
     protected function getDocument($loaderTask)
     {

@@ -31,7 +31,7 @@ interface LoaderInterface extends ClientInterface
      * @param string $uri
      * @return string
      * @throws ClientExceptionInterface
-     * @throws RuntimeException
+     * @throws LoaderException
      */
     public function load(string $uri): string;
 
