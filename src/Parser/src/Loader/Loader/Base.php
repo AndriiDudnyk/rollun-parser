@@ -78,7 +78,7 @@ class Base implements LoaderInterface
         $response = $this->sendRequest($request);
 
         if ($response->getStatusCode() != 200) {
-            throw new LoaderException("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
+            throw LoaderException::createCannotLoadException($uri, $response);
         }
 
         return $response->getBody()->getContents();

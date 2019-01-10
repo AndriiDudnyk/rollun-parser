@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS `products`
   `seller`                 VARCHAR(256),
   `watch`                  VARCHAR(256),
   `sold`                   VARCHAR(256),
-  `imgs`                   VARCHAR(4096),
-  `specs`                  VARCHAR(4096),
-  `uri`                    VARCHAR(4096),
+  `imgs`                   TEXT,
+  `specs`                  TEXT,
+  `uri`                    TEXT,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `loader_tasks`
   `uri`                    VARCHAR(256) NOT NULL,
   `created_at`             VARCHAR(256) NOT NULL,
   `updated_at`             VARCHAR(256) NOT NULL,
-  `options`                VARCHAR(1024),
+  `options`                TEXT,
   `status`                 VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `parser_tasks`
   `file`                   VARCHAR(256) NOT NULL,
   `created_at`             VARCHAR(256) NOT NULL,
   `updated_at`             VARCHAR(256) NOT NULL,
-  `options`                VARCHAR(1024),
+  `options`                TEXT,
   `status`                 VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
