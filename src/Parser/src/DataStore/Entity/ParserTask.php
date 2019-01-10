@@ -40,7 +40,8 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
 
     public function create($itemData, $rewriteIfExist = false)
     {
-        $itemData['created_at'] = time();
+        $itemData['created_at'] = microtime();
+        $itemData['updated_at'] = microtime();
 
         return parent::create($itemData, $rewriteIfExist);
     }
@@ -48,6 +49,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     public function update($itemData, $createIfAbsent = false)
     {
         unset($itemData['created_at']);
+        $itemData['updated_at'] = microtime();
 
         return parent::update($itemData, $createIfAbsent);
     }

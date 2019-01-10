@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `loader_tasks`
   `parser`                 VARCHAR(256) NOT NULL,
   `uri`                    VARCHAR(256) NOT NULL,
   `created_at`             VARCHAR(256) NOT NULL,
+  `updated_at`             VARCHAR(256) NOT NULL,
   `options`                VARCHAR(256),
   `status`                 VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `parser_tasks`
   `parser`                 VARCHAR(256) NOT NULL,
   `file`                   VARCHAR(256) NOT NULL,
   `created_at`             VARCHAR(256) NOT NULL,
+  `updated_at`             VARCHAR(256) NOT NULL,
   `options`                VARCHAR(256),
   `status`                 VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)

@@ -147,7 +147,7 @@ class Base implements LoaderManagerInterface
         }
 
         usort($tasks, function ($left, $right) {
-            return $left['time'] <=> $right['time'];
+            return $left['updated_at'] <=> $right['updated_at'];
         });
 
         return array_shift($tasks);
