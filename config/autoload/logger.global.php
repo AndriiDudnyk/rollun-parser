@@ -41,6 +41,13 @@ return [
                             'context' => 'context',
                             'lifecycle_token' => 'lifecycle_token',
                         ],
+                        'filters' => [
+                            'name' => 'priority',
+                            'options' => [
+                                'operator' => getenv('APP_DEBUG') == 'true' ? '<=' : '<',
+                                'priority' => 7
+                            ]
+                        ],
                         'formatter' => ContextToString::class,
                     ],
                 ],

@@ -49,7 +49,6 @@ require 'vendor/autoload.php';
     }
 
     $container->setService(LifeCycleToken::class, $lifeCycleToken);
-    $container->get(\Psr\Log\LoggerInterface::class)->error('dsadsad');
 
     $app->run();
 })();
