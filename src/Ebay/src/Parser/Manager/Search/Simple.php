@@ -23,5 +23,6 @@ class Simple extends Base
         LoggerInterface $logger = null
     ) {
         parent::__construct($parser, $entity, $parserTask, $loaderTask, $options);
+        $this->options['type'] = 'ebaySimple';
     }
 }

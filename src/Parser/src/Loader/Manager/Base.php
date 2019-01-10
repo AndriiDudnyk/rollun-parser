@@ -66,7 +66,7 @@ class Base implements LoaderManagerInterface
     public function executeLoading()
     {
         if (!$loaderTask = $this->getNewLoaderTask()) {
-            $this->logger->info("Free task for loader manager not found");
+            $this->logger->info("Free task for '" . static::class . "' loader manager not found");
             return;
         }
 

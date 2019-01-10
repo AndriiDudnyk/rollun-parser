@@ -49,12 +49,5 @@ require 'vendor/autoload.php';
     }
 
     $container->setService(LifeCycleToken::class, $lifeCycleToken);
-
-    try {
-        $logger = $container->get(\Psr\Log\LoggerInterface::class);
-    } catch (\Throwable $e) {
-        echo $e->getMessage();
-    }
-
-//    $app->run();
+    $app->run();
 })();

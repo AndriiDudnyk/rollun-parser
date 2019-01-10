@@ -68,6 +68,9 @@ class EbayMotors extends HtmlParser
             }
         }
 
-        return $products;
+        $result['products'] = $products;
+        $result['nextPage'] = $document->find('#Pagination .pages .curr + a')->attr('href');
+
+        return $result;
     }
 }

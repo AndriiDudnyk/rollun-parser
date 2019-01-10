@@ -13,6 +13,8 @@ use rollun\parser\Parser\Parser\ParserInterface;
 use rollun\parser\Parser\Manager\Base as BaseParserManager;
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\ProductInterface;
 use rollun\service\Parser\Ebay\Parser\Parser\Product as ProductParser;
+use rollun\service\Parser\Ebay\Parser\Parser\Search\Simple as SimpleSearchParser;
+use rollun\service\Parser\Ebay\Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
 
 class Base extends BaseParserManager
 {
@@ -32,13 +34,14 @@ class Base extends BaseParserManager
         $this->loaderTask = $loaderTask;
     }
 
-    protected function processResult(array $data, $parserTask): array
+    protected function processResult(array $result, $parserTask): array
     {
         $maxCorruptRecords = intval($this->options['maxCorruptRecords'] ?? self::DEF_MAX_CORRUPT_RECORDS);
         $corruptCount = 0;
         $checkedRecords = [];
+        $products = $result['products'];
 
-        foreach ($data as $record) {
+        foreach ($products as $record) {
             if ($corruptCount >= $maxCorruptRecords) {
                 $this->logger->warning('Stop parsing. Exceeded max corrupt count');
                 break;
@@ -64,7 +67,14 @@ class Base extends BaseParserManager
             $this->createNewTasks($record['item_id']);
         }
 
-        return $data;
+        if ($result['nextPage'] && $this->options['throughPagination']) {
+            $parser = $this->options['type'] == 'ebaySimple'
+                ? SimpleSearchParser::PARSER_NAME
+                : EbayMotorsSearchParser::PARSER_NAME;
+            $this->loaderTask->addLoaderTask($parser, $result['nextPage']);
+        }
+
+        return $products;
     }
 
     protected function createNewTasks($itemId)

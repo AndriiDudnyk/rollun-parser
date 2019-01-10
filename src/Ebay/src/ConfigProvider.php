@@ -212,6 +212,7 @@ class ConfigProvider
                         'productUri' => 'https://www.ebay.com/itm',
                         'maxCorruptRecords' => 30,
                         'saveCorruptedProducts' => 1,
+                        'throughPagination' => 1
                     ],
                 ],
                 EbayMotorsSearchParserManager::class => [
@@ -224,6 +225,7 @@ class ConfigProvider
                         'productUri' => 'https://www.ebay.com/itm',
                         'maxCorruptRecords' => 30,
                         'saveCorruptedProducts' => 1,
+                        'throughPagination' => 1
                     ],
                 ],
                 ProductParserManager::class => [
