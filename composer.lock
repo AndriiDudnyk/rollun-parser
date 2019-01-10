@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0a109999b72c2cd57896efe2f124632",
+    "content-hash": "11406105686a65fa9ccca060d00ad48e",
     "packages": [
         {
             "name": "avz-cmf/zend-psr3-log",
@@ -2104,16 +2104,16 @@
         },
         {
             "name": "rollun-com/rollun-callback",
-            "version": "5.0.1",
+            "version": "5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rollun-com/rollun-callback.git",
-                "reference": "6f518cf667cd4fb89ae5d7e1df6db6e94687e6b8"
+                "reference": "c69e9fea0da4db041378c2df07f75c4af24c471c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rollun-com/rollun-callback/zipball/6f518cf667cd4fb89ae5d7e1df6db6e94687e6b8",
-                "reference": "6f518cf667cd4fb89ae5d7e1df6db6e94687e6b8",
+                "url": "https://api.github.com/repos/rollun-com/rollun-callback/zipball/c69e9fea0da4db041378c2df07f75c4af24c471c",
+                "reference": "c69e9fea0da4db041378c2df07f75c4af24c471c",
                 "shasum": ""
             },
             "require": {
@@ -2162,7 +2162,7 @@
                 }
             ],
             "description": "Callback",
-            "time": "2018-12-22T13:36:20+00:00"
+            "time": "2019-01-10T11:33:49+00:00"
         },
         {
             "name": "rollun-com/rollun-datastore",
@@ -7226,7 +7226,8 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.1",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-openssl": "*"
     },
     "platform-dev": []
 }

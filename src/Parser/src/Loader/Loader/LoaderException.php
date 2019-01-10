@@ -7,6 +7,7 @@
 namespace rollun\parser\Loader\Loader;
 
 use Psr\Http\Message\ResponseInterface;
+use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 
 class LoaderException extends \Exception
 {
@@ -18,6 +19,9 @@ class LoaderException extends \Exception
 
     public static function createCannotLoadException($uri, ResponseInterface $response)
     {
-        throw new self("Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}");
+        throw new self(
+            "Can't load html from '$uri'. Reason: {$response->getReasonPhrase()}",
+            LoaderTaskInterface::STATUS_FAILED
+        );
     }
 }
