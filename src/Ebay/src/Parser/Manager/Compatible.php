@@ -66,7 +66,7 @@ class Compatible extends BaseParserManager
     protected function saveResult(array $records)
     {
         foreach ($records as $record) {
-            $this->entity->create($record);
+            $this->entity->create($record, true);
         }
     }
 

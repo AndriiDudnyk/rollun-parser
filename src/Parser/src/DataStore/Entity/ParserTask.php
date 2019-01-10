@@ -134,11 +134,25 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
         return $result;
     }
 
+    public function findByFile($file)
+    {
+        $eqNode = new EqNode('file', $file);
+        $query = new RqlQuery();
+        $query->setQuery($eqNode);
+
+        return $this->query($query);
+    }
+
     protected function htmlToFile($result)
     {
         if ($result['document']) {
             $fileName = md5($result['document']);
             $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
+
+            if (file_exists($filePath) && $existingDocs = $this->findByFile($filePath)) {
+                return current($existingDocs);
+            }
+
             file_put_contents($filePath, $result['document']);
         } else {
             $filePath = '';

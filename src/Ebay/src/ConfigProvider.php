@@ -10,10 +10,12 @@ namespace rollun\service\Parser\Ebay;
 
 use rollun\callback\Callback\Factory\CallbackAbstractFactoryAbstract;
 use rollun\callback\Callback\Factory\MultiplexerAbstractFactory;
+use rollun\callback\Callback\Factory\TickerAbstractFactory;
 use rollun\callback\Callback\Interrupter\Factory\InterruptAbstractFactoryAbstract;
 use rollun\callback\Callback\Interrupter\Factory\ProcessAbstractFactory;
 use rollun\callback\Callback\Interrupter\Process;
 use rollun\callback\Callback\Multiplexer;
+use rollun\callback\Callback\Ticker;
 use rollun\datastore\DataStore\CsvBase;
 use rollun\datastore\DataStore\Factory\DataStoreAbstractFactory;
 use rollun\datastore\DataStore\SerializedDbTable;
@@ -184,14 +186,14 @@ class ConfigProvider
                 ],
             ],
             CallbackAbstractFactoryAbstract::KEY => [
-                'ebay-loaders' => [
+                __NAMESPACE__ . 'ebay-loaders' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'baseLoaderProcess',
                         __NAMESPACE__ . 'searchLoaderProcess',
                     ],
                 ],
-                'ebay-parsers' => [
+                __NAMESPACE__ . 'ebay-parsers' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'simpleSearchParserProcess',
@@ -199,6 +201,49 @@ class ConfigProvider
                         __NAMESPACE__ . 'compatibleParserProcess',
                         __NAMESPACE__ . 'ebayMotorsSearchParserProcess',
                     ],
+                ],
+                __NAMESPACE__ . 'ebayMultiplexer' => [
+                    MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
+                    MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
+                        __NAMESPACE__ . 'ebay-loaders',
+                        __NAMESPACE__ . 'ebay-parsers',
+                    ]
+                ],
+                __NAMESPACE__ . 'ebay' => [
+                    TickerAbstractFactory::KEY_CLASS => Ticker::class,
+                    TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60 * 24,
+                    TickerAbstractFactory::KEY_TICK_DURATION => 2,
+                    TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebayMultiplexer',
+                ],
+            ],
+            InterruptAbstractFactoryAbstract::KEY => [
+                'ebay' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'ebay',
+                ],
+                __NAMESPACE__ . 'baseLoaderProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'baseLoaderManager',
+                ],
+                __NAMESPACE__ . 'searchLoaderProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'searchLoaderManager',
+                ],
+                __NAMESPACE__ . 'simpleSearchParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SimpleSearchParserManager::class,
+                ],
+                __NAMESPACE__ . 'productParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => ProductParserManager::class,
+                ],
+                __NAMESPACE__ . 'compatibleParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => CompatibleParserManager::class,
+                ],
+                __NAMESPACE__ . 'ebayMotorsSearchParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => EbayMotorsSearchParserManager::class,
                 ],
             ],
             AbstractParserManagerFactory::KEY => [
@@ -249,32 +294,6 @@ class ConfigProvider
                     CompatibleParserManagerFactory::KEY_OPTIONS => [
                         'createCompatibleTask' => 1,
                     ],
-                ],
-            ],
-            InterruptAbstractFactoryAbstract::KEY => [
-                __NAMESPACE__ . 'baseLoaderProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'baseLoaderManager',
-                ],
-                __NAMESPACE__ . 'searchLoaderProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'searchLoaderManager',
-                ],
-                __NAMESPACE__ . 'simpleSearchParserProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SimpleSearchParserManager::class,
-                ],
-                __NAMESPACE__ . 'productParserProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => ProductParserManager::class,
-                ],
-                __NAMESPACE__ . 'compatibleParserProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => CompatibleParserManager::class,
-                ],
-                __NAMESPACE__ . 'ebayMotorsSearchParserProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => EbayMotorsSearchParserManager::class,
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [

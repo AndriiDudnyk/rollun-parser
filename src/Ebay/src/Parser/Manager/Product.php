@@ -41,7 +41,16 @@ class Product extends BaseParserManager
         $record['item_id'] = $itemId;
 
         if (!$product) {
-            throw new InvalidArgumentException("Parsed product with id ");
+            $aheadOfCount = $this->options['aheadOfCount'] ?? 0;
+            $this->parserTask->update([
+                'id' => $parserTask['id'],
+                ParserTaskInterface::COLUMN_OPTIONS => array_merge($this->options, ['aheadOfCount' => ++$aheadOfCount]),
+                ParserTaskInterface::COLUMN_STATUS => ParserTaskInterface::STATUS_NEW
+            ]);
+
+            if ($aheadOfCount >= 5) {
+                throw new InvalidArgumentException("Product with id #{$itemId} not found");
+            }
         }
 
         $record['ebay_id'] = empty($product['ebay_id']) ? $record['ebay_id'] : $product['ebay_id'];

@@ -47,7 +47,7 @@ class Base extends BaseParserManager
                 break;
             }
 
-            if (!isset($record['item_id']) || !isset($record['url'])) {
+            if (!isset($record['item_id']) || !isset($record['uri'])) {
                 $maxCorruptRecords++;
                 $this->logger->warning('Corrupted item found', [
                     'record' => $record,
@@ -101,7 +101,7 @@ class Base extends BaseParserManager
             unset($record['item_id']);
             $record[ProductInterface::COLUMN_WATCH] = $record['watch'] ?? '';
             $record[ProductInterface::COLUMN_SOLD] = $record['sold'] ?? '';
-            $this->entity->create($record);
+            $this->entity->create($record, true);
         }
     }
 }

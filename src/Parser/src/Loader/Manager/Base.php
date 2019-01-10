@@ -73,15 +73,30 @@ class Base implements LoaderManagerInterface
         $this->logger->info("Loader start task #{$loaderTask['id']}");
         $status = null;
 
+        if (!$document = $this->load($loaderTask)) {
+            return;
+        }
+
+        try {
+            $this->processResult($loaderTask, $document);
+            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_SUCCESS);
+            $this->logger->info("Loader successfully finish task #{$loaderTask['id']}");
+        } catch (\Throwable $e) {
+            $this->loaderTask->setStatus($loaderTask['id'], $status);
+            $this->logger->error("Loader failed SAVE loaded document #{$loaderTask['id']}", [
+                'exception' => $e,
+            ]);
+        }
+    }
+
+    protected function load($loaderTask)
+    {
+        $document = null;
+
         try {
             $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_IN_PROCESS);
             $document = $this->getDocument($loaderTask);
-            $this->processResult($loaderTask, $document);
-
-            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_SUCCESS);
-
-            $this->logger->info("Loader successfully finish task #{$loaderTask['id']}");
-        } catch (LoaderException | ClientExceptionInterface $e) {
+        } catch (\Throwable $e) {
             if ($e instanceof LoaderException) {
                 $status = $e->getCode();
             } else {
@@ -89,10 +104,12 @@ class Base implements LoaderManagerInterface
             }
 
             $this->loaderTask->setStatus($loaderTask['id'], $status);
-            $this->logger->info("Loader failed task #{$loaderTask['id']}", [
+            $this->logger->error("Loader failed LOAD document #{$loaderTask['id']}", [
                 'exception' => $e,
             ]);
         }
+
+        return $document;
     }
 
     /**

@@ -40,6 +40,12 @@ interface ParserTaskInterface extends DataStoresInterface
     public function setStatus($id, $status);
 
     /**
+     * @param $file
+     * @return mixed
+     */
+    public function findByFile($file);
+
+    /**
      * @param $fields
      * @return array|iterable
      */

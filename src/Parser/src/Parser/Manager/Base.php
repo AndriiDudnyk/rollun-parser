@@ -66,24 +66,46 @@ abstract class Base implements ParserManagerInterface
         $this->setOptions($parserTask['options']);
         $status = null;
 
-        try {
-            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_IN_PROCESS);
-            $records = $this->parser->parse($parserTask['document']);
+        $records = $this->parse($parserTask);
 
-            if ($records) {
-                $records = $this->processResult($records, $parserTask);
-                $this->saveResult($records);
-                $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_SUCCESS);
-            } else {
-                $this->logger->warning("Parser did not parse any data from document #{$parserTask['id']}");
-                $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_NOT_PARSED);
-            }
+        if (!$records) {
+            $this->logger->warning("Parser DID NOT PARSE any data from document #{$parserTask['id']}");
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_NOT_PARSED);
+            return;
+        }
+
+        $this->save($records, $parserTask);
+    }
+
+    protected function save($records, $parserTask)
+    {
+        try {
+            $records = $this->processResult($records, $parserTask);
+            $this->saveResult($records);
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_SUCCESS);
         } catch (\Throwable $t) {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
-            $this->logger->warning("Parser failed parsing document #{$parserTask['id']}", [
+            $this->logger->error("Parser failed SAVE document #{$parserTask['id']}", [
                 'exception' => $t,
             ]);
         }
+    }
+
+    protected function parse($parserTask)
+    {
+        $records = null;
+
+        try {
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_IN_PROCESS);
+            $records = $this->parser->parse($parserTask['document']);
+        } catch (\Throwable $e) {
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
+            $this->logger->error("Parser failed PARSE document #{$parserTask['id']}", [
+                'exception' => $e,
+            ]);
+        }
+
+        return $records;
     }
 
     protected function processResult(array $data, $parserTask): array

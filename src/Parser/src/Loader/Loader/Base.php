@@ -109,13 +109,25 @@ class Base implements LoaderInterface
                 ]);
                 $response = $e->getResponse();
             }
-        } while (!$response && $attempt < $maxAttempts);
+        } while ((!$this->validateResponse($response) && $attempt < $maxAttempts));
 
         if (!$response) {
             throw new ClientException("Can't fetch response using {$attempt} attempts", $request);
         }
 
         return $response;
+    }
+
+    /**
+     * Return true if valid
+     *
+     * @param ResponseInterface $response
+     * @return bool
+     */
+    protected function validateResponse(ResponseInterface $response = null)
+    {
+        return isset($response)
+            && $response->getStatusCode() < 400;
     }
 
     /**
