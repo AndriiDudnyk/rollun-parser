@@ -17,9 +17,12 @@ interface LoaderTaskInterface extends PageInterface
 
     const COLUMN_PARSER_NAME = 'parser';
     const COLUMN_CREATED_AT = 'created_at';
+    const COLUMN_UPDATED_AT = 'updated_at';
     const COLUMN_STATUS = 'status';
     const COLUMN_OPTIONS = 'options';
     const COLUMN_URI = 'uri';
+    const COLUMN_HEARTBEAT_EXPIRATION = 'heartbeat_expiration';
+    const COLUMN_HEARTBEAT_ATTEMPT = 'heartbeat_attempt';
 
     public function addLoaderTask($parser, $uri, $options = []);
 

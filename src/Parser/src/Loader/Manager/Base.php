@@ -60,29 +60,38 @@ class Base implements LoaderManagerInterface
 
     public function __invoke()
     {
-        $this->executeLoading();
+        try {
+            $this->executeLoading();
+        } catch (\Throwable $e) {
+            $this->logger->critical('Failed invoke loading', ['exception' => $e]);
+        }
     }
 
     public function executeLoading()
     {
         if (!$loaderTask = $this->getNewLoaderTask()) {
-            $this->logger->info("Free task for '" . static::class . "' loader manager not found");
+            $this->logger->debug("Free task for '" . static::class . "' loader manager not found");
+
             return;
         }
 
-        $this->logger->info("Loader start task #{$loaderTask['id']}");
-        $status = null;
+        $this->logger->debug("Loader start task #{$loaderTask['id']}");
 
         if (!$document = $this->load($loaderTask)) {
             return;
         }
 
+        $this->save($loaderTask, $document);
+    }
+
+    protected function save($loaderTask, $document)
+    {
         try {
             $this->processResult($loaderTask, $document);
             $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_SUCCESS);
-            $this->logger->info("Loader successfully finish task #{$loaderTask['id']}");
+            $this->logger->debug("Loader successfully finish task #{$loaderTask['id']}");
         } catch (\Throwable $e) {
-            $this->loaderTask->setStatus($loaderTask['id'], $status);
+            $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_FAILED);
             $this->logger->error("Loader failed SAVE loaded document #{$loaderTask['id']}", [
                 'exception' => $e,
             ]);
@@ -91,25 +100,19 @@ class Base implements LoaderManagerInterface
 
     protected function load($loaderTask)
     {
-        $document = null;
-
         try {
             $this->loaderTask->setStatus($loaderTask['id'], LoaderTaskInterface::STATUS_IN_PROCESS);
-            $document = $this->getDocument($loaderTask);
-        } catch (\Throwable $e) {
-            if ($e instanceof LoaderException) {
-                $status = $e->getCode();
-            } else {
-                $status = LoaderTaskInterface::STATUS_FAILED;
-            }
 
+            return $this->getDocument($loaderTask);
+        } catch (\Throwable $e) {
+            $status = $e instanceof LoaderException ? $e->getCode() : LoaderTaskInterface::STATUS_FAILED;
             $this->loaderTask->setStatus($loaderTask['id'], $status);
             $this->logger->error("Loader failed LOAD document #{$loaderTask['id']}", [
                 'exception' => $e,
             ]);
-        }
 
-        return $document;
+            return null;
+        }
     }
 
     /**
@@ -154,7 +157,7 @@ class Base implements LoaderManagerInterface
         $query = new RqlQuery();
         $query->setQuery(new AndNode([
             new EqNode(LoaderTaskInterface::COLUMN_STATUS, LoaderTaskInterface::STATUS_NEW),
-            $parserOrNode
+            $parserOrNode,
         ]));
 
         $tasks = $this->loaderTask->query($query);

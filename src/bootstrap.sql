@@ -1,3 +1,4 @@
+DROP TABLE `products`;
 CREATE TABLE IF NOT EXISTS `products`
 (
   `id`                     VARCHAR(256) NOT NULL,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `products`
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
+DROP TABLE `compatibles`;
 CREATE TABLE IF NOT EXISTS `compatibles`
 (
   `id`                     VARCHAR(256) NOT NULL,
@@ -26,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `compatibles`
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
+DROP TABLE `loader_tasks`;
 CREATE TABLE IF NOT EXISTS `loader_tasks`
 (
   `id`                     VARCHAR(256) NOT NULL,
@@ -35,9 +38,12 @@ CREATE TABLE IF NOT EXISTS `loader_tasks`
   `updated_at`             VARCHAR(256) NOT NULL,
   `options`                TEXT,
   `status`                 VARCHAR(256) NOT NULL,
+  `heartbeat_expiration`   VARCHAR(256) NOT NULL,
+  `heartbeat_attempt`      VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
+DROP TABLE `parser_tasks`;
 CREATE TABLE IF NOT EXISTS `parser_tasks`
 (
   `id`                     VARCHAR(256) NOT NULL,
@@ -50,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `parser_tasks`
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
-
+DROP TABLE `proxies`;
 CREATE TABLE IF NOT EXISTS `proxies`
 (
   `id`                     VARCHAR(256) NOT NULL,

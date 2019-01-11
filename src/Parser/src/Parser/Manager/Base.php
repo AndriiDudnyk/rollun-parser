@@ -53,17 +53,23 @@ abstract class Base implements ParserManagerInterface
 
     public function __invoke()
     {
-        $this->executeParsing();
+        try {
+            $this->executeParsing();
+        } catch (\Throwable $e) {
+            $this->logger->critical('Failed invoke parsing', ['exception' => $e]);
+        }
     }
 
     public function executeParsing()
     {
         if (!$parserTask = $this->getNewParserTask($this->parser->getName())) {
-            $this->logger->info("Free documents for parser manager not found");
+            $this->logger->debug("Free documents for parser manager not found");
+
             return;
         }
 
         $this->setOptions($parserTask['options']);
+        $this->logger->debug("Parser start task #{$parserTask['id']}");
         $status = null;
 
         $records = $this->parse($parserTask);
@@ -71,6 +77,7 @@ abstract class Base implements ParserManagerInterface
         if (!$records) {
             $this->logger->warning("Parser DID NOT PARSE any data from document #{$parserTask['id']}");
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_NOT_PARSED);
+
             return;
         }
 
@@ -93,19 +100,18 @@ abstract class Base implements ParserManagerInterface
 
     protected function parse($parserTask)
     {
-        $records = null;
-
         try {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_IN_PROCESS);
-            $records = $this->parser->parse($parserTask['document']);
+
+            return $this->parser->parse($parserTask['document']);
         } catch (\Throwable $e) {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
             $this->logger->error("Parser failed PARSE document #{$parserTask['id']}", [
                 'exception' => $e,
             ]);
-        }
 
-        return $records;
+            return null;
+        }
     }
 
     protected function processResult(array $data, $parserTask): array
@@ -120,7 +126,7 @@ abstract class Base implements ParserManagerInterface
         try {
             $parserTasks = $this->parserTask->getParserTaskByFields([
                 ParserTaskInterface::COLUMN_STATUS => ParserTaskInterface::STATUS_NEW,
-                ParserTaskInterface::COLUMN_PARSER_NAME => $parserName
+                ParserTaskInterface::COLUMN_PARSER_NAME => $parserName,
             ]);
         } catch (\Throwable $t) {
             throw new RuntimeException("Can't load document for parser '{$parserName}'", 0, $t);

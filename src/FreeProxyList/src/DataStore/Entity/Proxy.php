@@ -116,7 +116,10 @@ class Proxy extends AspectAbstract implements ProxyInterface
     public function setUsedProxy(string $uri)
     {
         $query = new RqlQuery();
-        $query->setQuery(new EqNode('uri', $uri));
+        $query->setQuery(new AndNode([
+            new EqNode('uri', $uri),
+            new EqNode('is_used', 0),
+        ]));
         $query->setLimit(new LimitNode(1));
 
         $proxies = $this->query($query);

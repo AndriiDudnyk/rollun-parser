@@ -48,8 +48,8 @@ class Product extends BaseParserManager
                 ParserTaskInterface::COLUMN_STATUS => ParserTaskInterface::STATUS_NEW
             ]);
 
-            if ($aheadOfCount >= 5) {
-                throw new InvalidArgumentException("Product with id #{$itemId} not found");
+            if ($aheadOfCount >= 100) {
+                throw new InvalidArgumentException("Product with id #{$itemId} not found: {$aheadOfCount}");
             }
         }
 

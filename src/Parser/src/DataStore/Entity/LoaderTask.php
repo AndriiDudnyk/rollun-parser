@@ -7,26 +7,35 @@
 namespace rollun\parser\DataStore\Entity;
 
 use rollun\parser\DataStore\JsonAspect;
+use rollun\parser\Loader\Heartbeat;
 
 class LoaderTask extends JsonAspect implements LoaderTaskInterface
 {
     protected function getJsonFields(): array
     {
-        return ['options'];
+        return [self::COLUMN_OPTIONS];
     }
 
     public function create($itemData, $rewriteIfExist = false)
     {
-        $itemData['created_at'] = microtime(true);
-        $itemData['updated_at'] = microtime(true);
+        $itemData[self::COLUMN_CREATED_AT] = microtime(true);
+        $itemData[self::COLUMN_UPDATED_AT] = microtime(true);
+
+        if (!isset($itemData[self::COLUMN_HEARTBEAT_EXPIRATION])) {
+            $itemData[self::COLUMN_HEARTBEAT_EXPIRATION] = time() + Heartbeat::HEARTBEAT_TIMEOUT;
+        }
+
+        if (!isset($itemData[self::COLUMN_HEARTBEAT_ATTEMPT])) {
+            $itemData[self::COLUMN_HEARTBEAT_ATTEMPT] = time() + Heartbeat::HEARTBEAT_TIMEOUT;
+        }
 
         return parent::create($itemData, $rewriteIfExist);
     }
 
     public function update($itemData, $createIfAbsent = false)
     {
-        unset($itemData['created_at']);
-        $itemData['updated_at'] = microtime(true);
+        unset($itemData[self::COLUMN_CREATED_AT]);
+        $itemData[self::COLUMN_UPDATED_AT] = microtime(true);
 
         return parent::update($itemData, $createIfAbsent);
     }
@@ -34,10 +43,10 @@ class LoaderTask extends JsonAspect implements LoaderTaskInterface
     public function addLoaderTask($parser, $uri, $options = [])
     {
         $record = $this->create([
-            'parser' => $parser,
-            'uri' => $uri,
-            'status' => 0,
-            'options' => $options
+            self::COLUMN_PARSER_NAME => $parser,
+            self::COLUMN_URI => $uri,
+            self::COLUMN_STATUS => 0,
+            self::COLUMN_OPTIONS => $options
         ]);
 
         return $record[$this->dataStore->getIdentifier()];
@@ -52,8 +61,8 @@ class LoaderTask extends JsonAspect implements LoaderTaskInterface
     public function setStatus($id, $status)
     {
         $this->update([
-            'id' => $id,
-            'status' => $status,
+            $this->dataStore->getIdentifier() => $id,
+            self::COLUMN_STATUS => $status,
         ]);
     }
 }

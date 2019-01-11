@@ -14,7 +14,7 @@ class LoaderException extends \Exception
     public static function createProxyRunOutException($createTaskIfNoExist)
     {
         $addMessage = $createTaskIfNoExist ? ', and add new task for proxy parser' : '';
-        throw new self("Unused proxies run out" . $addMessage, 0);
+        throw new self("Unused proxies run out" . $addMessage, LoaderTaskInterface::STATUS_NEW);
     }
 
     public static function createCannotLoadException($uri, ResponseInterface $response)

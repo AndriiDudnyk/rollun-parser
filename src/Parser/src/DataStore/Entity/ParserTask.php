@@ -40,16 +40,16 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
 
     public function create($itemData, $rewriteIfExist = false)
     {
-        $itemData['created_at'] = microtime(true);
-        $itemData['updated_at'] = microtime(true);
+        $itemData[self::COLUMN_CREATED_AT] = microtime(true);
+        $itemData[self::COLUMN_UPDATED_AT] = microtime(true);
 
         return parent::create($itemData, $rewriteIfExist);
     }
 
     public function update($itemData, $createIfAbsent = false)
     {
-        unset($itemData['created_at']);
-        $itemData['updated_at'] = microtime(true);
+        unset($itemData[self::COLUMN_CREATED_AT]);
+        $itemData[self::COLUMN_UPDATED_AT] = microtime(true);
 
         return parent::update($itemData, $createIfAbsent);
     }
@@ -57,10 +57,10 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     public function addParserTask($parser, $document, $options = [])
     {
         $record = $this->create([
-            'parser' => $parser,
-            'document' => $document,
-            'status' => self::STATUS_NEW,
-            'options' => $options
+            self::COLUMN_PARSER_NAME => $parser,
+            self::COLUMN_ABSTRACT_DOCUMENT => $document,
+            self::COLUMN_STATUS => self::STATUS_NEW,
+            self::COLUMN_OPTIONS => $options
         ]);
 
         return $record[$this->dataStore->getIdentifier()];
@@ -73,7 +73,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     {
         $itemData = $this->preProcessJsonFields($itemData);
 
-        if (!isset($itemData['document'])) {
+        if (!isset($itemData[self::COLUMN_ABSTRACT_DOCUMENT])) {
             throw new InvalidArgumentException('Invalid incoming data');
         }
 
@@ -87,7 +87,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     {
         $itemData = $this->preProcessJsonFields($itemData);
 
-        if (!isset($itemData['document'])) {
+        if (!isset($itemData[self::COLUMN_ABSTRACT_DOCUMENT])) {
             return $itemData;
         }
 
@@ -101,7 +101,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
             throw new InvalidArgumentException('Invalid incoming data');
         }
 
-        unlink($record['file']);
+        unlink($record[self::COLUMN_FILE]);
         return $this->htmlToFile($itemData);
     }
 
@@ -112,8 +112,8 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     {
         $result = $this->postProcessJsonFields($result);
 
-        $result['document'] = file_get_contents($result['file']);
-        unset($result['file']);
+        $result[self::COLUMN_ABSTRACT_DOCUMENT] = file_get_contents($result[self::COLUMN_FILE]);
+        unset($result[self::COLUMN_FILE]);
 
         return $result;
     }
@@ -136,7 +136,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
 
     public function findByFile($file)
     {
-        $eqNode = new EqNode('file', $file);
+        $eqNode = new EqNode(self::COLUMN_FILE, $file);
         $query = new RqlQuery();
         $query->setQuery($eqNode);
 
@@ -145,34 +145,29 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
 
     protected function htmlToFile($result)
     {
-        if ($result['document']) {
-            $fileName = md5($result['document']);
+        if ($result[self::COLUMN_ABSTRACT_DOCUMENT]) {
+            $fileName = uniqid(md5($result[self::COLUMN_ABSTRACT_DOCUMENT]));
             $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
-
-            if (file_exists($filePath) && $existingDocs = $this->findByFile($filePath)) {
-                return current($existingDocs);
-            }
-
-            file_put_contents($filePath, $result['document']);
+            file_put_contents($filePath, $result[self::COLUMN_ABSTRACT_DOCUMENT]);
         } else {
             $filePath = '';
         }
 
-        unset($result['document']);
-        $result['file'] = $filePath;
+        unset($result[self::COLUMN_ABSTRACT_DOCUMENT]);
+        $result[self::COLUMN_FILE] = $filePath;
 
         return $result;
     }
 
     protected function fileToHtml($result)
     {
-        if ($result['file']) {
-            $result['document'] = file_get_contents($result['file']);
+        if ($result[self::COLUMN_FILE]) {
+            $result[self::COLUMN_ABSTRACT_DOCUMENT] = file_get_contents($result[self::COLUMN_FILE]);
         } else {
-            $result['document'] = '';
+            $result[self::COLUMN_ABSTRACT_DOCUMENT] = '';
         }
 
-        unset($result['file']);
+        unset($result[self::COLUMN_FILE]);
 
         return $result;
     }

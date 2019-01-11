@@ -72,6 +72,8 @@ class Base extends BaseParserManager
                 ? SimpleSearchParser::PARSER_NAME
                 : EbayMotorsSearchParser::PARSER_NAME;
             $this->loaderTask->addLoaderTask($parser, $result['nextPage']);
+        } elseif (!$result['nextPage']) {
+            $this->logger->warning('Next page not found or it can be last one in ' . static::class);
         }
 
         return $products;
@@ -99,6 +101,11 @@ class Base extends BaseParserManager
         foreach ($records as $record) {
             $record['id'] = $record['item_id'];
             unset($record['item_id']);
+
+            if ($this->entity->has($record['id'])) {
+                $this->logger->notice("Product with id #{$record['id']} already exist");
+            }
+
             $record[ProductInterface::COLUMN_WATCH] = $record['watch'] ?? '';
             $record[ProductInterface::COLUMN_SOLD] = $record['sold'] ?? '';
             $this->entity->create($record, true);

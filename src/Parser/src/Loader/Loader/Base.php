@@ -111,7 +111,7 @@ class Base implements LoaderInterface
             }
         } while ((!$this->validateResponse($response) && $attempt < $maxAttempts));
 
-        if (!$response) {
+        if (!$this->validateResponse($response)) {
             throw new ClientException("Can't fetch response using {$attempt} attempts", $request);
         }
 

@@ -18,9 +18,12 @@ interface ParserTaskInterface extends DataStoresInterface
 
     const COLUMN_PARSER_NAME = 'parser';
     const COLUMN_CREATED_AT = 'created_at';
+    const COLUMN_UPDATED_AT = 'updated_at';
     const COLUMN_STATUS = 'status';
     const COLUMN_OPTIONS = 'options';
-    const COLUMN_FILE = 'document';
+    const COLUMN_FILE = 'file';
+
+    const COLUMN_ABSTRACT_DOCUMENT = 'document';
 
     /**
      * Add new task with status self::STATUS_NEW
