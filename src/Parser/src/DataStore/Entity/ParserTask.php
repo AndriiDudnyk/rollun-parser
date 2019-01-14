@@ -12,6 +12,7 @@ use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use rollun\datastore\Rql\RqlQuery;
 use rollun\dic\InsideConstruct;
 use rollun\parser\DataStore\JsonAspect;
+use RuntimeException;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use Xiag\Rql\Parser\Query;
@@ -159,7 +160,10 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
         if ($result[self::COLUMN_ABSTRACT_DOCUMENT]) {
             $fileName = uniqid(md5($result[self::COLUMN_ABSTRACT_DOCUMENT]));
             $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
-            file_put_contents($filePath, $result[self::COLUMN_ABSTRACT_DOCUMENT]);
+
+            if (!file_put_contents($filePath, $result[self::COLUMN_ABSTRACT_DOCUMENT])) {
+                throw new RuntimeException("Failed save document in {$filePath} file");
+            }
         } else {
             $filePath = '';
         }
@@ -173,7 +177,11 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     protected function fileToHtml($result)
     {
         if ($result[self::COLUMN_FILE]) {
-            $result[self::COLUMN_ABSTRACT_DOCUMENT] = file_get_contents($result[self::COLUMN_FILE]);
+            if (!$document = file_get_contents($result[self::COLUMN_FILE])) {
+                throw new RuntimeException("Failed load document from {$document} file");
+            }
+
+            $result[self::COLUMN_ABSTRACT_DOCUMENT] = $document;
         } else {
             $result[self::COLUMN_ABSTRACT_DOCUMENT] = '';
         }
@@ -218,7 +226,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
 
     public function __sleep()
     {
-        return ['datastore', 'storeDir'];
+        return ['dataStore', 'storeDir'];
     }
 
     public function __wakeup()
