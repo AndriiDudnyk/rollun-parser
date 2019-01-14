@@ -12,7 +12,7 @@ use rollun\dic\InsideConstruct;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\GtNode;
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\LtNode;
 
 class Heartbeat
 {
@@ -39,10 +39,10 @@ class Heartbeat
 
     public function __invoke()
     {
-        $gtNode = new GtNode(LoaderTaskInterface::COLUMN_HEARTBEAT_EXPIRATION, time());
+        $ltNode = new LtNode(LoaderTaskInterface::COLUMN_HEARTBEAT_EXPIRATION, time());
         $eqNode = new EqNode(LoaderTaskInterface::COLUMN_STATUS, LoaderTaskInterface::STATUS_IN_PROCESS);
         $query = new RqlQuery();
-        $query->setQuery(new AndNode([$gtNode, $eqNode]));
+        $query->setQuery(new AndNode([$ltNode, $eqNode]));
 
         $loaderTasks = $this->loaderTask->query($query);
 
