@@ -7,13 +7,11 @@
 namespace rollun\parser;
 
 use rollun\callback\Callback\Factory\CallbackAbstractFactoryAbstract;
-use rollun\callback\Callback\Factory\SerializedCallbackAbstractFactory;
 use rollun\callback\Callback\Factory\TickerAbstractFactory;
 use rollun\callback\Callback\Interrupter\Factory\InterruptAbstractFactoryAbstract;
 use rollun\callback\Callback\Interrupter\Factory\ProcessAbstractFactory;
 use rollun\callback\Callback\Interrupter\Process;
 use rollun\callback\Callback\Ticker;
-use rollun\datastore\DataStore\CsvBase;
 use rollun\datastore\DataStore\Factory\DataStoreAbstractFactory;
 use rollun\parser\DataStore\AutoGenerateIdAspect;
 use rollun\parser\DataStore\Entity\LoaderTask;
@@ -89,17 +87,6 @@ class ConfigProvider
                 ParserTaskFactory::KEY_STORE_DIR => getenv('DOCUMENT_DIR'),
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [
-                // leave for quick testing and extending
-//                __NAMESPACE__ . 'parserTaskDataStore' => [
-//                    'class' => CsvBase::class,
-//                    'filename' => 'data/datastores/parser_tasks.csv',
-//                    'delimiter' => ',',
-//                ],
-//                __NAMESPACE__ . 'loaderTaskDataStore' => [
-//                    'class' => CsvBase::class,
-//                    'filename' => 'data/datastores/loader_tasks.csv',
-//                    'delimiter' => ',',
-//                ],
                 __NAMESPACE__ . 'parserTaskDataStore' => [
                     'class' => LoggedDbTable::class,
                     'tableGateway' => 'parser_tasks',

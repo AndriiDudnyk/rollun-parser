@@ -16,7 +16,6 @@ use rollun\callback\Callback\Interrupter\Factory\ProcessAbstractFactory;
 use rollun\callback\Callback\Interrupter\Process;
 use rollun\callback\Callback\Multiplexer;
 use rollun\callback\Callback\Ticker;
-use rollun\datastore\DataStore\CsvBase;
 use rollun\datastore\DataStore\Factory\DataStoreAbstractFactory;
 use rollun\parser\DataStore\AutoGenerateIdAspect;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
@@ -32,17 +31,20 @@ use rollun\service\Parser\Ebay\Parser\Parser\Product as ProductParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Compatible as CompatibleParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\Simple as SimpleSearchParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
+use rollun\service\Parser\Ebay\Parser\Parser\Search\SoldEbayMotors as SoldEbayMotorsSearchParser;
 
 // Parser managers
 use rollun\service\Parser\Ebay\Parser\Manager\Product as ProductParserManager;
 use rollun\service\Parser\Ebay\Parser\Manager\Compatible as CompatibleParserManager;
 use rollun\service\Parser\Ebay\Parser\Manager\Search\Simple as SimpleSearchParserManager;
 use rollun\service\Parser\Ebay\Parser\Manager\Search\EbayMotors as EbayMotorsSearchParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\Search\SoldEbayMotors as SoldEbayMotorsSearchParserManager;
 
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\SearchFactory as SearchParserManagerFactory;
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\ProductFactory as ProductParserManagerFactory;
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\CompatibleFactory as CompatibleParserManagerFactory;
-use rollun\parser\Parser\Manager\BaseFactory as BaseParserManagerFactory;
+use rollun\service\Parser\Ebay\Parser\Manager\Factory\SoldEbayMotorsSearchFactory
+    as SoldEbayMotorsSearchParserManagerFactory;
 use rollun\parser\Parser\Manager\AbstractFactory as AbstractParserManagerFactory;
 
 // Loader managers
@@ -55,9 +57,11 @@ use rollun\parser\Loader\Manager\BaseFactory as BaseLoaderManagerFactory;
 // Entity datastores
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\ProductInterface as ProductEntityStoreInterface;
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\CompatibleInterface as CompatibleEntityStoreInterface;
+use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\SoldProductInterface as SoldProductEntityStoreInterface;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface as LoaderTaskStoreEntityInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface as ParserTaskStoreEntityInterface;
 use rollun\service\Parser\Ebay\DataStore\Entity\Product as ProductEntityStore;
+use rollun\service\Parser\Ebay\DataStore\Entity\SoldProduct as SoldProductEntityStore;
 use rollun\service\Parser\Ebay\DataStore\Entity\Compatible as CompatibleEntityStore;
 
 // Page datastores
@@ -94,6 +98,7 @@ class ConfigProvider
                     SimpleSearchParser::class => SimpleSearchParser::class,
                     CompatibleParser::class => CompatibleParser::class,
                     EbayMotorsSearchParser::class => EbayMotorsSearchParser::class,
+                    SoldEbayMotorsSearchParser::class => SoldEbayMotorsSearchParser::class,
                 ],
                 'factories' => [
                     // Manager factories
@@ -101,6 +106,7 @@ class ConfigProvider
                     SimpleSearchParserManager::class => SearchParserManagerFactory::class,
                     CompatibleParserManager::class => CompatibleParserManagerFactory::class,
                     EbayMotorsSearchParserManager::class => SearchParserManagerFactory::class,
+                    SoldEbayMotorsSearchParserManager::class => SoldEbayMotorsSearchParserManagerFactory::class,
 
                     // Store factories
                     CompatiblePageStore::class => BasePageStoreFactory::class,
@@ -125,8 +131,8 @@ class ConfigProvider
                 'ebay-product-page-store' => "/https\:\/\/www\.ebay\.com\/itm\/[0-9]+/",
                 'ebay-simple-search-page-store' => "/https\:\/\/www\.ebay\.com\/sch\/eBay-Motors\//",
                 'ebay-motors-search-page-store' => '/https\:\/\/www\.ebay\.com\/sch\//',
-                'ebay-compatible-page-store' => "/https\:\/\/frame\.ebay\.com\/ebaymotors\/ws\/eBayISAPI\.dll" .
-                    "?GetFitmentData/",
+                'ebay-compatible-page-store' => "/https\:\/\/frame\.ebay\.com\/ebaymotors\/ws\/eBayISAPI\.dll"
+                    . "?GetFitmentData/",
             ],
             PageStoreDetectorFactory::class => [
                 ProductPageStore::class => "/https\:\/\/www\.ebay\.com\/itm\/[0-9]+/",
@@ -146,6 +152,7 @@ class ConfigProvider
                     SearchLoaderManagerFactory::KEY_PARSER_NAMES => [
                         SimpleSearchParser::PARSER_NAME,
                         EbayMotorsSearchParser::PARSER_NAME,
+                        SoldEbayMotorsSearchParser::PARSER_NAME,
                     ],
                 ],
                 __NAMESPACE__ . 'baseLoaderManager' => [
@@ -200,6 +207,7 @@ class ConfigProvider
                         __NAMESPACE__ . 'productParserProcess',
                         __NAMESPACE__ . 'compatibleParserProcess',
                         __NAMESPACE__ . 'ebayMotorsSearchParserProcess',
+                        __NAMESPACE__ . 'soldEbayMotorsSearchParserProcess',
                     ],
                 ],
                 __NAMESPACE__ . 'ebayMultiplexer' => [
@@ -207,12 +215,12 @@ class ConfigProvider
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'ebay-loaders',
                         __NAMESPACE__ . 'ebay-parsers',
-                    ]
+                    ],
                 ],
                 __NAMESPACE__ . 'ebay' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60,
-                    TickerAbstractFactory::KEY_TICK_DURATION => 3,
+                    TickerAbstractFactory::KEY_TICK_DURATION => 1,
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebayMultiplexer',
                 ],
             ],
@@ -245,6 +253,10 @@ class ConfigProvider
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => EbayMotorsSearchParserManager::class,
                 ],
+                __NAMESPACE__ . 'soldEbayMotorsSearchParserProcess' => [
+                    ProcessAbstractFactory::KEY_CLASS => Process::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SoldEbayMotorsSearchParserManager::class,
+                ],
             ],
             AbstractParserManagerFactory::KEY => [
                 SimpleSearchParserManager::class => [
@@ -257,20 +269,44 @@ class ConfigProvider
                         'productUri' => 'https://www.ebay.com/itm',
                         'maxCorruptRecords' => 30,
                         'saveCorruptedProducts' => 1,
-                        'throughPagination' => 1
+                        'throughPagination' => 1,
                     ],
                 ],
                 EbayMotorsSearchParserManager::class => [
                     SearchParserManagerFactory::KEY_PARSER => EbayMotorsSearchParser::class,
                     SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
-                    SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => ProductEntityStoreInterface::class,
                     SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
+                    SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => ProductEntityStoreInterface::class,
                     SearchParserManagerFactory::KEY_OPTIONS => [
                         'createProductParseTask' => 1,
                         'productUri' => 'https://www.ebay.com/itm',
                         'maxCorruptRecords' => 30,
                         'saveCorruptedProducts' => 1,
-                        'throughPagination' => 1
+                        'throughPagination' => 1,
+                    ],
+                ],
+                EbayMotorsSearchParserManager::class => [
+                    SearchParserManagerFactory::KEY_PARSER => EbayMotorsSearchParser::class,
+                    SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
+                    SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
+                    SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => ProductEntityStoreInterface::class,
+                    SearchParserManagerFactory::KEY_OPTIONS => [
+                        'createProductParseTask' => 1,
+                        'productUri' => 'https://www.ebay.com/itm',
+                        'maxCorruptRecords' => 30,
+                        'saveCorruptedProducts' => 1,
+                        'throughPagination' => 1,
+                    ],
+                ],
+                SoldEbayMotorsSearchParserManager::class => [
+                    SearchParserManagerFactory::KEY_PARSER => SoldEbayMotorsSearchParser::class,
+                    SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
+                    SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
+                    SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => SoldProductEntityStoreInterface::class,
+                    SearchParserManagerFactory::KEY_OPTIONS => [
+                        'maxCorruptRecords' => 30,
+                        'saveCorruptedProducts' => 1,
+                        'throughPagination' => 1,
                     ],
                 ],
                 ProductParserManager::class => [
@@ -297,20 +333,13 @@ class ConfigProvider
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [
-                // leave for quick testing and extending
-//                __NAMESPACE__ . 'productEntityStore' => [
-//                    'class' => CsvBase::class,
-//                    'filename' => 'data/datastores/products.csv',
-//                    'delimiter' => ',',
-//                ],
-//                __NAMESPACE__ . 'compatibleEntityStore' => [
-//                    'class' => CsvBase::class,
-//                    'filename' => 'data/datastores/compatibles.csv',
-//                    'delimiter' => ',',
-//                ],
                 __NAMESPACE__ . 'productEntityStore' => [
                     'class' => LoggedDbTable::class,
                     'tableGateway' => 'products',
+                ],
+                __NAMESPACE__ . 'soldProductEntityStore' => [
+                    'class' => LoggedDbTable::class,
+                    'tableGateway' => 'sold_products',
                 ],
                 __NAMESPACE__ . 'compatibleEntityStore' => [
                     'class' => LoggedDbTable::class,
@@ -320,6 +349,10 @@ class ConfigProvider
                     'class' => AutoGenerateIdAspect::class,
                     'dataStore' => __NAMESPACE__ . 'productEntityStore',
                 ],
+                __NAMESPACE__ . 'soldProductEntityStoreAutoGeneratedId' => [
+                    'class' => AutoGenerateIdAspect::class,
+                    'dataStore' => __NAMESPACE__ . 'soldProductEntityStore',
+                ],
                 __NAMESPACE__ . 'compatibleEntityStoreAutoGeneratedId' => [
                     'class' => AutoGenerateIdAspect::class,
                     'dataStore' => __NAMESPACE__ . 'compatibleEntityStore',
@@ -327,6 +360,10 @@ class ConfigProvider
                 ProductEntityStoreInterface::class => [
                     'class' => ProductEntityStore::class,
                     'dataStore' => __NAMESPACE__ . 'productEntityStoreAutoGeneratedId',
+                ],
+                SoldProductEntityStoreInterface::class => [
+                    'class' => SoldProductEntityStore::class,
+                    'dataStore' => __NAMESPACE__ . 'soldProductEntityStoreAutoGeneratedId',
                 ],
                 CompatibleEntityStoreInterface::class => [
                     'class' => CompatibleEntityStore::class,
@@ -336,7 +373,8 @@ class ConfigProvider
             'tableGateway' => [
                 'products' => [],
                 'compatibles' => [],
-            ]
+                'sold_products' => [],
+            ],
         ];
     }
 }

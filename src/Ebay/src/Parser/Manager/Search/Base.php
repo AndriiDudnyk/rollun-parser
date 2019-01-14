@@ -55,6 +55,8 @@ class Base extends BaseParserManager
 
                 if ($this->options['saveCorruptedProducts']) {
                     $checkedRecords[] = $record;
+                } else {
+                    continue;
                 }
             } else {
                 $checkedRecords[] = $record;
@@ -76,7 +78,7 @@ class Base extends BaseParserManager
             $this->logger->warning('Next page not found or it can be last one in ' . static::class);
         }
 
-        return $products;
+        return $checkedRecords;
     }
 
     protected function createNewTasks($itemId)

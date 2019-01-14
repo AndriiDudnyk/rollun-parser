@@ -40,9 +40,8 @@ class SearchFactory extends BaseFactory
         if (!is_a($class, BaseSearchParserManager::class, true)) {
             throw new InvalidArgumentException(
                 sprintf(
-                    'Expected class %, given %s',
-                    BaseSearchParserManager::class,
-                    is_object($class) ? get_class($class) : gettype($class)
+                    "Expected class %s, given $class",
+                    BaseSearchParserManager::class
                 )
             );
         }

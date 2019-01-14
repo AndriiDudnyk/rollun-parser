@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `loader_tasks`
 (
   `id`                     VARCHAR(256) NOT NULL,
   `parser`                 VARCHAR(256) NOT NULL,
-  `uri`                    VARCHAR(256) NOT NULL,
+  `uri`                    TEXT,
   `created_at`             VARCHAR(256) NOT NULL,
   `updated_at`             VARCHAR(256) NOT NULL,
   `options`                TEXT,
@@ -66,3 +66,16 @@ CREATE TABLE IF NOT EXISTS `proxies`
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
+DROP TABLE `sold_products`;
+CREATE TABLE IF NOT EXISTS `sold_products`
+(
+  `id`                     VARCHAR(256) NOT NULL,
+  `item_id`                VARCHAR(256),
+  `uri`                    TEXT,
+  `title`                  VARCHAR(256),
+  `price`                  VARCHAR(256),
+  `shipping`               VARCHAR(256),
+  `seller`                 VARCHAR(256),
+  `date`                   VARCHAR(256),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;

@@ -14,7 +14,6 @@ use rollun\callback\Callback\Interrupter\Factory\ProcessAbstractFactory;
 use rollun\callback\Callback\Interrupter\Process;
 use rollun\callback\Callback\Multiplexer;
 use rollun\callback\Callback\Ticker;
-use rollun\datastore\DataStore\CsvBase;
 use rollun\datastore\DataStore\Factory\DataStoreAbstractFactory;
 use rollun\parser\DataStore\AutoGenerateIdAspect;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
@@ -134,12 +133,6 @@ class ConfigProvider
                 ],
             ],
             DataStoreAbstractFactory::KEY_DATASTORE => [
-                // leave for quick testing and extending
-//                __NAMESPACE__ . 'proxyDataStore' => [
-//                    'class' => CsvBase::class,
-//                    'filename' => 'data/datastores/proxies.csv',
-//                    'delimiter' => ',',
-//                ],
                 __NAMESPACE__ . 'proxyDataStore' => [
                     'class' => LoggedDbTable::class,
                     'tableGateway' => 'proxies',
