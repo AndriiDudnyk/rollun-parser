@@ -79,8 +79,8 @@ class ConfigProvider
             CallbackAbstractFactoryAbstract::KEY => [
                 __NAMESPACE__ . 'loaderHeartbeatTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60,
-                    TickerAbstractFactory::KEY_TICK_DURATION => 1,
+                    TickerAbstractFactory::KEY_TICKS_COUNT => 1,
+                    TickerAbstractFactory::KEY_TICK_DURATION => 3,
                     TickerAbstractFactory::KEY_CALLBACK => Heartbeat::class,
                 ]
             ],

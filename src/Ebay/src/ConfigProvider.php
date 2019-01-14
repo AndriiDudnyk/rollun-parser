@@ -211,8 +211,8 @@ class ConfigProvider
                 ],
                 __NAMESPACE__ . 'ebay' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60,
-                    TickerAbstractFactory::KEY_TICK_DURATION => 1,
+                    TickerAbstractFactory::KEY_TICKS_COUNT => 1,
+                    TickerAbstractFactory::KEY_TICK_DURATION => 3,
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebayMultiplexer',
                 ],
             ],

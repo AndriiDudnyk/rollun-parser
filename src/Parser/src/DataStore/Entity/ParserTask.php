@@ -7,8 +7,10 @@
 namespace rollun\parser\DataStore\Entity;
 
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use rollun\datastore\DataStore\Interfaces\DataStoresInterface;
 use rollun\datastore\Rql\RqlQuery;
+use rollun\dic\InsideConstruct;
 use rollun\parser\DataStore\JsonAspect;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
@@ -16,13 +18,24 @@ use Xiag\Rql\Parser\Query;
 
 class ParserTask extends JsonAspect implements ParserTaskInterface
 {
+    protected $storeDir;
+
     /**
-     * HtmlDataStore constructor.
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * ParserTask constructor.
      * @param DataStoresInterface $dataStore
      * @param string $storeDir
+     * @param LoggerInterface|null $logger
+     * @throws \ReflectionException
      */
-    public function __construct(DataStoresInterface $dataStore, string $storeDir)
+    public function __construct(DataStoresInterface $dataStore, string $storeDir, LoggerInterface $logger = null)
     {
+        InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
+
         if (!file_exists($storeDir)) {
             throw new InvalidArgumentException("Directory '{$storeDir}' not found");
         }
@@ -35,8 +48,6 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
     {
         return ['options'];
     }
-
-    protected $storeDir;
 
     public function create($itemData, $rewriteIfExist = false)
     {
@@ -203,5 +214,15 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
         $query->setQuery(new AndNode($eqNodes));
 
         return $this->query($query);
+    }
+
+    public function __sleep()
+    {
+        return ['datastore', 'storeDir'];
+    }
+
+    public function __wakeup()
+    {
+        InsideConstruct::initWakeup(['logger' => LoggerInterface::class]);
     }
 }
