@@ -161,7 +161,7 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
             $fileName = uniqid(md5($result[self::COLUMN_ABSTRACT_DOCUMENT]));
             $filePath = $this->storeDir . DIRECTORY_SEPARATOR . $fileName . '.html';
 
-            if (!file_put_contents($filePath, $result[self::COLUMN_ABSTRACT_DOCUMENT])) {
+            if (file_put_contents($filePath, $result[self::COLUMN_ABSTRACT_DOCUMENT]) === false) {
                 throw new RuntimeException("Failed save document in {$filePath} file");
             }
         } else {
