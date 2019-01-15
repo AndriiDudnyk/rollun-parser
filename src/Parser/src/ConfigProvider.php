@@ -79,8 +79,8 @@ class ConfigProvider
             CallbackAbstractFactoryAbstract::KEY => [
                 __NAMESPACE__ . 'loaderHeartbeatTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => getenv('LOADER_HEARTBEAT_TICK_COUNT'),
-                    TickerAbstractFactory::KEY_TICK_DURATION => getenv('LOADER_HEARTBEAT_TICK_DURATION'),
+                    TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('LOADER_HEARTBEAT_TICK_COUNT')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('LOADER_HEARTBEAT_TICK_DURATION')),
                     TickerAbstractFactory::KEY_CALLBACK => Heartbeat::class,
                 ]
             ],

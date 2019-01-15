@@ -229,7 +229,7 @@ class ConfigProvider
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'ebayProductLoaders',
-//                        __NAMESPACE__ . 'ebayProductParsers',
+                        __NAMESPACE__ . 'ebayProductParsers',
                     ],
                 ],
                 __NAMESPACE__ . 'ebaySoldProductMultiplexer' => [
@@ -243,14 +243,14 @@ class ConfigProvider
                 // Tickers
                 __NAMESPACE__ . 'ebayProduct' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => getenv('EBAY_PRODUCT_TICK_COUNT'),
-                    TickerAbstractFactory::KEY_TICK_DURATION => getenv('EBAY_PRODUCT_TICK_DURATION'),
+                    TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_PRODUCT_TICK_COUNT')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_PRODUCT_TICK_DURATION')),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebayProductMultiplexer',
                 ],
                 __NAMESPACE__ . 'ebaySoldProduct' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => getenv('EBAY_SOLD_PRODUCT_TICK_COUNT'),
-                    TickerAbstractFactory::KEY_TICK_DURATION => getenv('EBAY_SOLD_PRODUCT_TICK_DURATION'),
+                    TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_SOLD_PRODUCT_TICK_COUNT')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_SOLD_PRODUCT_TICK_DURATION')),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebaySoldProductMultiplexer',
                 ],
             ],
