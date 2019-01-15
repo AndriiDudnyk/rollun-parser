@@ -15,6 +15,12 @@ interface ParserInterface
     public function parse(string $data): array;
 
     /**
+     * @param string $data
+     * @return bool
+     */
+    public function canParse(string $data): bool;
+
+    /**
      * @return string
      */
     public function getName(): string;

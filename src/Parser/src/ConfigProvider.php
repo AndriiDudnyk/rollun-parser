@@ -63,7 +63,6 @@ class ConfigProvider
                         LoaderInterface::COOKIE_DOMAIN_OPTION => '.ebay.com',
                         LoaderInterface::USE_PROXY_OPTION => 1,
                         LoaderInterface::FAKE_USER_AGENT_OPTION => 1,
-                        LoaderInterface::FAKE_USER_AGENT_OS_OPTION => 'chrome',
                         LoaderInterface::MAX_ATTEMPTS_OPTION => 30,
                         LoaderInterface::CONNECTION_TIMEOUT_OPTION => 10,
                         LoaderInterface::ALLOW_REDIRECT_OPTION => 1,
