@@ -82,6 +82,7 @@ class Base implements LoaderManagerInterface
         }
 
         $this->save($loaderTask, $document);
+        $this->afterSave($loaderTask);
     }
 
     protected function save($loaderTask, $document)
@@ -142,6 +143,19 @@ class Base implements LoaderManagerInterface
         $loader->setOptions($options);
 
         return $loader;
+    }
+
+    protected function afterSave($loaderTask)
+    {
+    }
+
+    protected function repeatTask($loaderTask)
+    {
+        $this->loaderTask->create([
+            'uri' => $loaderTask['uri'],
+            'parser' => $loaderTask['parser'],
+            'status' => LoaderTaskInterface::STATUS_NEW
+        ]);
     }
 
     protected function getNewLoaderTask(): ?array

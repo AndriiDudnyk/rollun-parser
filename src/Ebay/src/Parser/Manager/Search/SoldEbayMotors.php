@@ -6,12 +6,15 @@
 
 namespace rollun\service\Parser\Ebay\Parser\Manager\Search;
 
+use rollun\datastore\Rql\RqlQuery;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\SoldEbayMotors as SoldEbayMotorsSearchParser;
 use Psr\Log\LoggerInterface;
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\SoldProductInterface;
 use rollun\parser\Parser\Manager\Base as BaseParserManager;
+use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 
 class SoldEbayMotors extends BaseParserManager
 {
@@ -59,7 +62,7 @@ class SoldEbayMotors extends BaseParserManager
                 $checkedRecord = $record;
             }
 
-            $checkedRecord['date'] = (\DateTime::createFromFormat('F-d H:i', $checkedRecord['date']))->getTimestamp();
+//            $checkedRecord['date'] = (\DateTime::createFromFormat('F-d H:i', $checkedRecord['date']))->getTimestamp();
             $checkedRecords[] = $checkedRecord;
         }
 
@@ -72,11 +75,26 @@ class SoldEbayMotors extends BaseParserManager
         return $checkedRecords;
     }
 
-    protected function saveResult(array $records)
+    protected function saveResult(array $products)
     {
-        foreach ($records as $record) {
-            $this->entity->create($record);
+        foreach ($products as $product) {
+            if ($this->isNewSoldProduct($product)) {
+                $this->entity->create($product);
+            }
         }
+    }
+
+    protected function isNewSoldProduct($product)
+    {
+        $query = new RqlQuery();
+        $query->setQuery(new AndNode([
+            new EqNode('item_id', $product['item_id']),
+            new EqNode('date', $product['date'])
+        ]));
+
+        $soldProducts = $this->entity->query($query);
+
+        return !count($soldProducts);
     }
 
     public function __sleep()

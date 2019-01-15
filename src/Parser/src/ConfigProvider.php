@@ -62,6 +62,8 @@ class ConfigProvider
                         LoaderInterface::CREATE_TASK_IF_NO_PROXIES_OPTION => 1,
                         LoaderInterface::COOKIE_DOMAIN_OPTION => '.ebay.com',
                         LoaderInterface::USE_PROXY_OPTION => 1,
+                        LoaderInterface::FAKE_USER_AGENT_OPTION => 1,
+                        LoaderInterface::FAKE_USER_AGENT_OS_OPTION => 'chrome',
                         LoaderInterface::MAX_ATTEMPTS_OPTION => 30,
                         LoaderInterface::CONNECTION_TIMEOUT_OPTION => 10,
                         LoaderInterface::ALLOW_REDIRECT_OPTION => 1,
@@ -77,8 +79,8 @@ class ConfigProvider
             CallbackAbstractFactoryAbstract::KEY => [
                 __NAMESPACE__ . 'loaderHeartbeatTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60,
-                    TickerAbstractFactory::KEY_TICK_DURATION => 3,
+                    TickerAbstractFactory::KEY_TICKS_COUNT => getenv('LOADER_HEARTBEAT_TICK_COUNT'),
+                    TickerAbstractFactory::KEY_TICK_DURATION => getenv('LOADER_HEARTBEAT_TICK_DURATION'),
                     TickerAbstractFactory::KEY_CALLBACK => Heartbeat::class,
                 ]
             ],

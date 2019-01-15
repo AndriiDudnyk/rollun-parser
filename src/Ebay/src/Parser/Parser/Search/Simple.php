@@ -52,7 +52,7 @@ class Simple extends HtmlParser
             $hotnessText = $pq->find('.s-item__hotness>.NEGATIVE')->text();
 
             if (stristr($hotnessText, 'Watching')) {
-                $products[$key]['watching'] = $hotnessText;
+                $products[$key]['watch'] = $hotnessText;
             }
 
             if (stristr($hotnessText, 'Sold')) {
@@ -61,7 +61,7 @@ class Simple extends HtmlParser
         }
 
         $result['products'] = $products;
-        $result['nextPage'] = $document->find('#Pagination .pages .curr + a')->attr('href');
+        $result['nextPage'] = $document->find('.s-pagination .x-pagination__li--selected + li')->attr('href');
 
         return $result;
     }

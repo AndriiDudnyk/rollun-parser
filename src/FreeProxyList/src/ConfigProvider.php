@@ -104,8 +104,8 @@ class ConfigProvider
                 ],
                 __NAMESPACE__ . 'proxy' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => 60 * 60,
-                    TickerAbstractFactory::KEY_TICK_DURATION => 5,
+                    TickerAbstractFactory::KEY_TICKS_COUNT => getenv('PROXY_TICK_COUNT'),
+                    TickerAbstractFactory::KEY_TICK_DURATION => getenv('PROXY_TICK_DURATION'),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'proxyMultiplexer',
                 ]
             ],

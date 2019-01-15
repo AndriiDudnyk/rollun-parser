@@ -26,7 +26,11 @@ class LoaderTask extends JsonAspect implements LoaderTaskInterface
         }
 
         if (!isset($itemData[self::COLUMN_HEARTBEAT_ATTEMPT])) {
-            $itemData[self::COLUMN_HEARTBEAT_ATTEMPT] = time() + Heartbeat::HEARTBEAT_TIMEOUT;
+            $itemData[self::COLUMN_HEARTBEAT_ATTEMPT] = 0;
+        }
+
+        if (!isset($itemData[self::COLUMN_OPTIONS])) {
+            $itemData[self::COLUMN_OPTIONS] = [];
         }
 
         return parent::create($itemData, $rewriteIfExist);

@@ -74,14 +74,8 @@ abstract class Base implements ParserManagerInterface
 
         $records = $this->parse($parserTask);
 
-        if (!$records) {
-            $this->logger->warning("Parser DID NOT PARSE any data from document #{$parserTask['id']}");
-            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_NOT_PARSED);
-
-            return;
-        }
-
         $this->save($records, $parserTask);
+        $this->afterSave($parserTask);
     }
 
     protected function save($records, $parserTask)
@@ -117,6 +111,10 @@ abstract class Base implements ParserManagerInterface
     protected function processResult(array $data, $parserTask): array
     {
         return $data;
+    }
+
+    protected function afterSave($parserTask)
+    {
     }
 
     abstract protected function saveResult(array $records);

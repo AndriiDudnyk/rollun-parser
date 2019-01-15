@@ -41,6 +41,12 @@ class Base extends BaseParserManager
         $checkedRecords = [];
         $products = $result['products'];
 
+        if (!$products) {
+            $this->logger->error("Parser DID NOT PARSE any data from document #{$parserTask['id']}");
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_NOT_PARSED);
+            die;
+        }
+
         foreach ($products as $record) {
             if ($corruptCount >= $maxCorruptRecords) {
                 $this->logger->warning('Stop parsing. Exceeded max corrupt count');

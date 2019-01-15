@@ -55,6 +55,10 @@ class ParserTask extends JsonAspect implements ParserTaskInterface
         $itemData[self::COLUMN_CREATED_AT] = microtime(true);
         $itemData[self::COLUMN_UPDATED_AT] = microtime(true);
 
+        if (!isset($itemData[self::COLUMN_OPTIONS])) {
+            $itemData[self::COLUMN_OPTIONS] = [];
+        }
+
         return parent::create($itemData, $rewriteIfExist);
     }
 

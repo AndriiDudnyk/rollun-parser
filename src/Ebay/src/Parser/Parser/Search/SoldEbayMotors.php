@@ -11,7 +11,7 @@ use phpQuery as PhpQuery;
 
 class SoldEbayMotors extends HtmlParser
 {
-    public const PARSER_NAME = 'soldEbaySimpleSearch';
+    public const PARSER_NAME = 'soldEbayMotorsSearch';
 
     public function parse(string $data): array
     {
