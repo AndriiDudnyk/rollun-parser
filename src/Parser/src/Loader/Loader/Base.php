@@ -15,13 +15,10 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
 use rollun\dic\InsideConstruct;
-use rollun\parser\UserAgentGenerator;
 use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface;
 
 class Base implements LoaderInterface
 {
-    protected $userAgentGenerator;
-
     protected $proxyDataStore;
 
     protected $options;
@@ -35,7 +32,6 @@ class Base implements LoaderInterface
 
     /**
      * Base constructor.
-     * @param UserAgentGenerator $userAgentGenerator
      * @param ProxyInterface $proxyDataStore
      * @param ServerRequestFactoryInterface $requestFactory
      * @param array $options
@@ -43,7 +39,6 @@ class Base implements LoaderInterface
      * @throws ReflectionException
      */
     public function __construct(
-        UserAgentGenerator $userAgentGenerator,
         ProxyInterface $proxyDataStore,
         ServerRequestFactoryInterface $requestFactory,
         array $options = [],
@@ -51,7 +46,6 @@ class Base implements LoaderInterface
     ) {
         InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
 
-        $this->userAgentGenerator = $userAgentGenerator;
         $this->proxyDataStore = $proxyDataStore;
         $this->setOptions($options);
         $this->requestFactory = $requestFactory;
@@ -167,9 +161,7 @@ class Base implements LoaderInterface
         $options = [];
 
         if (!empty($this->options[self::FAKE_USER_AGENT_OPTION])) {
-            $userAgent = $this->userAgentGenerator->generate(
-                $this->options[self::FAKE_USER_AGENT_OS_OPTION] ?? self::DEF_USER_AGENT_OS
-            );
+            $userAgent = (\Faker\Factory::create())->chrome;
             $options['headers']['User-Agent'] = $userAgent;
         }
 
