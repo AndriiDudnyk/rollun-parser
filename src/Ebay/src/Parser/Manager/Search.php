@@ -4,7 +4,7 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\service\Parser\Ebay\Parser\Manager\Search;
+namespace rollun\service\Parser\Ebay\Parser\Manager;
 
 use Psr\Log\LoggerInterface;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
@@ -13,10 +13,8 @@ use rollun\parser\Parser\Parser\ParserInterface;
 use rollun\parser\Parser\Manager\Base as BaseParserManager;
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\ProductInterface;
 use rollun\service\Parser\Ebay\Parser\Parser\Product as ProductParser;
-use rollun\service\Parser\Ebay\Parser\Parser\Search\Simple as SimpleSearchParser;
-use rollun\service\Parser\Ebay\Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
 
-class Base extends BaseParserManager
+class Search extends BaseParserManager
 {
     const DEF_MAX_CORRUPT_RECORDS = 30;
 
@@ -76,10 +74,7 @@ class Base extends BaseParserManager
         }
 
         if ($result['nextPage'] && $this->options['throughPagination']) {
-            $parser = $this->options['type'] == 'ebaySimple'
-                ? SimpleSearchParser::PARSER_NAME
-                : EbayMotorsSearchParser::PARSER_NAME;
-            $this->loaderTask->addLoaderTask($parser, $result['nextPage']);
+            $this->loaderTask->addLoaderTask($this->parser->getName(), $result['nextPage']);
         } elseif (!$result['nextPage']) {
             $this->logger->warning('Next page not found or it can be last one in ' . static::class);
         }
@@ -107,16 +102,31 @@ class Base extends BaseParserManager
     protected function saveResult(array $records)
     {
         foreach ($records as $record) {
-            $record['id'] = $record['item_id'];
-            unset($record['item_id']);
+            $product = $this->createRecordForStore($record);
 
-            if ($this->entity->has($record['id'])) {
-                $this->logger->notice("Product with id #{$record['id']} already exist");
+            if ($this->entity->has($product['id'])) {
+                $this->logger->notice("Product with id #{$product['id']} already exist");
             }
 
-            $record[ProductInterface::COLUMN_WATCH] = $record['watch'] ?? '';
-            $record[ProductInterface::COLUMN_SOLD] = $record['sold'] ?? '';
-            $this->entity->create($record, true);
+            $this->entity->create($product, true);
         }
+    }
+
+    protected function createRecordForStore($record)
+    {
+        return [
+            'id' => $record['item_id'],
+            ProductInterface::COLUMN_WATCH => $record['watch'] ?? '',
+            ProductInterface::COLUMN_SOLD => $record['sold'] ?? '',
+            ProductInterface::COLUMN_CATEGORY => $record['category'] ?? '',
+            ProductInterface::COLUMN_IMGS => $record['imgs'] ?? '',
+            ProductInterface::COLUMN_PRICE => $record['price'] ?? '',
+            ProductInterface::COLUMN_SHIPPING => $record['shipping'] ?? '',
+            ProductInterface::COLUMN_SPECS => $record['specs'] ?? '',
+            ProductInterface::COLUMN_TITLE => $record['title'] ?? '',
+            ProductInterface::COLUMN_URI => $record['uri'] ?? '',
+            ProductInterface::COLUMN_SELLER => $record['seller'] ?? '',
+            ProductInterface::COLUMN_EBAY_ID => $record['ebay_id'] ?? '',
+        ];
     }
 }

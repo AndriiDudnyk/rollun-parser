@@ -35,4 +35,9 @@ class Compatible extends JsonParser
 
         return $result;
     }
+
+    public function canParse(string $data): bool
+    {
+        return boolval(json_decode($data, true) ?? null);
+    }
 }

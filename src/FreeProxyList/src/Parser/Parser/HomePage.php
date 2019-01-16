@@ -8,8 +8,10 @@ namespace rollun\service\Parser\FreeProxyList\Parser\Parser;
 
 use phpQuery as PhpQuery;
 use rollun\parser\Parser\Parser\HtmlParser;
+use rollun\parser\Parser\Parser\ParserInterface;
+use rollun\parser\Parser\ParserResolver\ParserResolverInterface;
 
-class HomePage extends HtmlParser
+final class HomePage extends HtmlParser implements ParserResolverInterface
 {
     const PARSER_NAME = 'proxy';
 
@@ -34,12 +36,23 @@ class HomePage extends HtmlParser
             $isHttp = trim($pq->find('td')->eq(6)->text());
 
 
-
             $scheme = $isHttp == 'yes' ? 'https' : 'http';
 
             $proxies[] = "$scheme://$host:$port";
         }
 
         return $proxies;
+    }
+
+    public function getParser($document): ?ParserInterface
+    {
+        return new self();
+    }
+
+    public function canParse(string $data): bool
+    {
+        $document = PhpQuery::newDocument($data);
+
+        return boolval($document->find('#proxylisttable tbody tr'));
     }
 }

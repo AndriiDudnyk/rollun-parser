@@ -4,35 +4,34 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\parser\Parser\ParseResolver;
+namespace rollun\parser\Parser\ParserResolver;
 
+use InvalidArgumentException;
 use rollun\parser\Parser\Parser\ParserInterface;
-use rollun\parser\Parser\Parser\ParserPluginManager;
-use RuntimeException;
 
-class Simple implements ParseResolverInterface
+class Simple implements ParserResolverInterface
 {
-    protected $possibleParsers;
+    protected $parsers;
 
-    protected $parserPluginManager;
-
-    public function __construct(ParserPluginManager $parserPluginManager, array $possibleParsers)
+    public function __construct(array $parsers)
     {
-        $this->parserPluginManager = $parserPluginManager;
-        $this->possibleParsers = $possibleParsers;
+        foreach ($parsers as $parser) {
+            if (!$parser instanceof ParserInterface) {
+                throw new InvalidArgumentException('Parsers should implement ' . ParserInterface::class);
+            }
+        }
+
+        $this->parsers = $parsers;
     }
 
-    public function getParser($document): ParserInterface
+    public function getParser($document): ?ParserInterface
     {
-        foreach ($this->possibleParsers as $possibleParser) {
-            /** @var ParserInterface $parser */
-            $parser = $this->parserPluginManager->get($possibleParser);
-
+        foreach ($this->parsers as $parser) {
             if ($parser->canParse($document)) {
                 return $parser;
             }
         }
 
-        throw new RuntimeException("Failed find correct parser for document");
+        return null;
     }
 }

@@ -72,7 +72,7 @@ class Product extends HtmlParser
 
             if ($pq->find('td')->eq(2)->count()) {
                 $key++;
-                $specs[$key]['name'] =  trim(trim($pq->find('td')->eq(2)->text()), ':');
+                $specs[$key]['name'] = trim(trim($pq->find('td')->eq(2)->text()), ':');
                 $specs[$key]['value'] = trim($pq->find('td')->eq(3)->text());
             }
         }
@@ -80,5 +80,12 @@ class Product extends HtmlParser
         $product['specs'] = $specs;
 
         return $product;
+    }
+
+    public function canParse(string $data): bool
+    {
+        $document = PhpQuery::newDocument($data);
+
+        return boolval($document->find('#mbgLink')->attr('href'));
     }
 }

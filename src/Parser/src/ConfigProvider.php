@@ -27,6 +27,10 @@ use rollun\parser\DataStore\Page\PagePluginManager;
 use rollun\parser\Loader\Heartbeat;
 use rollun\parser\Loader\Loader\LoaderAbstractFactory;
 use rollun\parser\Loader\Loader\LoaderInterface;
+use rollun\parser\Parser\Parser\LazyParserAbstractFactory;
+use rollun\parser\Parser\Parser\ParserPluginManager;
+use rollun\parser\Parser\Parser\ParserPluginManagerFactory;
+use rollun\parser\Parser\ParserResolver\SimpleAbstractFactory as SimpleParserResolverAbstractFactory;
 use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface as ProxyEntityStoreInterface;
 
 class ConfigProvider
@@ -42,10 +46,13 @@ class ConfigProvider
                 'factories' => [
                     ParserTask::class => ParserTaskFactory::class,
                     PageDetector::class => PageDetectorFactory::class,
-                    PagePluginManager::class => PagePluginManagerFactory::class
+                    PagePluginManager::class => PagePluginManagerFactory::class,
+                    ParserPluginManager::class => ParserPluginManagerFactory::class,
                 ],
                 'abstract_factories' => [
                     LoaderAbstractFactory::class,
+                    SimpleParserResolverAbstractFactory::class,
+                    LazyParserAbstractFactory::class
                 ],
                 'aliases' => [
                     'page-detector' => PageDetector::class,

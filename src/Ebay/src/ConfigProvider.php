@@ -23,6 +23,7 @@ use rollun\parser\DataStore\Entity\ParserTaskInterface;
 use rollun\parser\DataStore\LoggedDbTable;
 use rollun\parser\DataStore\Page\PageDetectorFactory;
 use rollun\parser\Loader\Loader\LoaderInterface;
+use rollun\parser\Parser\Parser\LazyParserAbstractFactory;
 use rollun\service\Parser\Ebay\Helper\SearchPage as SearchPageHelper;
 use rollun\service\Parser\Ebay\Helper\SearchPageFactory;
 
@@ -31,26 +32,24 @@ use rollun\service\Parser\Ebay\Parser\Parser\Product as ProductParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Compatible as CompatibleParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\Simple as SimpleSearchParser;
 use rollun\service\Parser\Ebay\Parser\Parser\Search\EbayMotors as EbayMotorsSearchParser;
-use rollun\service\Parser\Ebay\Parser\Parser\Search\SoldEbayMotors as SoldEbayMotorsSearchParser;
 
 // Parser managers
 use rollun\service\Parser\Ebay\Parser\Manager\Product as ProductParserManager;
 use rollun\service\Parser\Ebay\Parser\Manager\Compatible as CompatibleParserManager;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\Simple as SimpleSearchParserManager;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\EbayMotors as EbayMotorsSearchParserManager;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\SoldEbayMotors as SoldEbayMotorsSearchParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\Search as SearchParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\SoldSearch as SoldSearchParserManager;
 
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\SearchFactory as SearchParserManagerFactory;
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\ProductFactory as ProductParserManagerFactory;
 use rollun\service\Parser\Ebay\Parser\Manager\Factory\CompatibleFactory as CompatibleParserManagerFactory;
-use rollun\service\Parser\Ebay\Parser\Manager\Factory\SoldEbayMotorsSearchFactory
+use rollun\service\Parser\Ebay\Parser\Manager\Factory\SoldSearchFactory
     as SoldEbayMotorsSearchParserManagerFactory;
 use rollun\parser\Parser\Manager\AbstractFactory as AbstractParserManagerFactory;
 
 // Loader managers
 use rollun\parser\Loader\Manager\Base as BaseLoaderManager;
 use rollun\service\Parser\Ebay\Loader\Manager\Search as SearchLoaderManager;
-use rollun\service\Parser\Ebay\Loader\Manager\SoldProductSearch as SoldProductSearchLoaderManager;
+use rollun\service\Parser\Ebay\Loader\Manager\SoldSearch as SoldProductSearchLoaderManager;
 use rollun\service\Parser\Ebay\Loader\Manager\SearchFactory as SearchLoaderManagerFactory;
 use rollun\parser\Loader\Manager\AbstractFactory as AbstractLoaderManagerFactory;
 use rollun\parser\Loader\Manager\BaseFactory as BaseLoaderManagerFactory;
@@ -76,6 +75,8 @@ use rollun\parser\DataStore\Page\Factory\AbstractPageFactory as AbstractPageStor
 use rollun\service\Parser\Ebay\DataStore\Page\Search\SearchFactory as BaseSearchPageStoreFactory;
 use rollun\parser\DataStore\Page\PageDetectorFactory as PageStoreDetectorFactory;
 
+use rollun\parser\Parser\ParserResolver\SimpleAbstractFactory as SimpleParserResolverAbstractFactory;
+
 /**
  * The configuration provider for the App module
  *
@@ -99,15 +100,13 @@ class ConfigProvider
                     SimpleSearchParser::class => SimpleSearchParser::class,
                     CompatibleParser::class => CompatibleParser::class,
                     EbayMotorsSearchParser::class => EbayMotorsSearchParser::class,
-                    SoldEbayMotorsSearchParser::class => SoldEbayMotorsSearchParser::class,
                 ],
                 'factories' => [
                     // Manager factories
                     ProductParserManager::class => ProductParserManagerFactory::class,
-                    SimpleSearchParserManager::class => SearchParserManagerFactory::class,
+                    SearchParserManager::class => SearchParserManagerFactory::class,
                     CompatibleParserManager::class => CompatibleParserManagerFactory::class,
-                    EbayMotorsSearchParserManager::class => SearchParserManagerFactory::class,
-                    SoldEbayMotorsSearchParserManager::class => SoldEbayMotorsSearchParserManagerFactory::class,
+                    SoldSearchParserManager::class => SoldEbayMotorsSearchParserManagerFactory::class,
 
                     // Store factories
                     CompatiblePageStore::class => BasePageStoreFactory::class,
@@ -119,7 +118,7 @@ class ConfigProvider
 
                     __NAMESPACE__ . 'searchLoaderManager' => SearchLoaderManagerFactory::class,
                     __NAMESPACE__ . 'baseLoaderManager' => BaseLoaderManagerFactory::class,
-                    __NAMESPACE__ . 'soldProductSearchLoaderManager' => SearchLoaderManagerFactory::class,
+                    __NAMESPACE__ . 'soldSearchLoaderManager' => SearchLoaderManagerFactory::class,
                 ],
                 'aliases' => [
                     // Page store (out)
@@ -127,6 +126,22 @@ class ConfigProvider
                     'ebay-simple-search-page-store' => SimpleSearchPageStore::class,
                     'ebay-motors-search-page-store' => EbayMotorsSearchPageStore::class,
                     'ebay-compatible-page-store' => CompatiblePageStore::class,
+                ],
+            ],
+            SimpleParserResolverAbstractFactory::class => [
+                __NAMESPACE__ . 'searchParserResolver' => [
+                    SimpleSearchParser::class ,
+                    EbayMotorsSearchParser::class,
+                ],
+            ],
+            LazyParserAbstractFactory::class => [
+                __NAMESPACE__ . 'searchLazyParser' => [
+                    LazyParserAbstractFactory::KEY_PARSER_NAME => 'ebaySearch',
+                    LazyParserAbstractFactory::KEY_PARSER_RESOLVER => __NAMESPACE__ . 'searchParserResolver',
+                ],
+                __NAMESPACE__ . 'soldSearchLazyParser' => [
+                    LazyParserAbstractFactory::KEY_PARSER_NAME => 'soldEbaySearch',
+                    LazyParserAbstractFactory::KEY_PARSER_RESOLVER => __NAMESPACE__ . 'searchParserResolver',
                 ],
             ],
             PageDetectorFactory::class => [
@@ -152,18 +167,17 @@ class ConfigProvider
                     SearchLoaderManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskInterface::class,
                     SearchLoaderManagerFactory::KEY_SEARCH_PAGE_HELPER => SearchPageHelper::class,
                     SearchLoaderManagerFactory::KEY_PARSER_NAMES => [
-                        SimpleSearchParser::PARSER_NAME,
-                        EbayMotorsSearchParser::PARSER_NAME,
+                        'ebaySearch'
                     ],
                 ],
-                __NAMESPACE__ . 'soldProductSearchLoaderManager' => [
+                __NAMESPACE__ . 'soldSearchLoaderManager' => [
                     BaseLoaderManagerFactory::KEY_CLASS => SoldProductSearchLoaderManager::class,
                     SearchLoaderManagerFactory::KEY_LOADER => LoaderInterface::class,
                     SearchLoaderManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskInterface::class,
                     SearchLoaderManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskInterface::class,
                     SearchLoaderManagerFactory::KEY_SEARCH_PAGE_HELPER => SearchPageHelper::class,
                     SearchLoaderManagerFactory::KEY_PARSER_NAMES => [
-                        SoldEbayMotorsSearchParser::PARSER_NAME,
+                        'SoldEbaySearch'
                     ],
                 ],
                 __NAMESPACE__ . 'baseLoaderManager' => [
@@ -217,51 +231,50 @@ class ConfigProvider
                 __NAMESPACE__ . 'ebayProductParsers' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
-                        __NAMESPACE__ . 'simpleSearchParserProcess',
+                        __NAMESPACE__ . 'searchParserProcess',
                         __NAMESPACE__ . 'productParserProcess',
                         __NAMESPACE__ . 'compatibleParserProcess',
-                        __NAMESPACE__ . 'ebayMotorsSearchParserProcess',
                     ],
                 ],
 
                 // Loaders + Parsers in Multiplexer
-                __NAMESPACE__ . 'ebayProductMultiplexer' => [
+                __NAMESPACE__ . 'productMultiplexer' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'ebayProductLoaders',
                         __NAMESPACE__ . 'ebayProductParsers',
                     ],
                 ],
-                __NAMESPACE__ . 'ebaySoldProductMultiplexer' => [
+                __NAMESPACE__ . 'soldProductMultiplexer' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
-                        __NAMESPACE__ . 'soldProductSearchLoaderProcess',
-                        __NAMESPACE__ . 'soldEbayMotorsSearchParserProcess',
+                        __NAMESPACE__ . 'soldSearchLoaderProcess',
+                        __NAMESPACE__ . 'soldSearchParserProcess',
                     ],
                 ],
 
                 // Tickers
-                __NAMESPACE__ . 'ebayProduct' => [
+                __NAMESPACE__ . 'productTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_PRODUCT_TICK_COUNT')),
                     TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_PRODUCT_TICK_DURATION')),
-                    TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebayProductMultiplexer',
+                    TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'productMultiplexer',
                 ],
-                __NAMESPACE__ . 'ebaySoldProduct' => [
+                __NAMESPACE__ . 'soldProductTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_SOLD_PRODUCT_TICK_COUNT')),
                     TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_SOLD_PRODUCT_TICK_DURATION')),
-                    TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'ebaySoldProductMultiplexer',
+                    TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'soldProductMultiplexer',
                 ],
             ],
             InterruptAbstractFactoryAbstract::KEY => [
                 'ebay-product' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'ebayProduct',
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'productTicker',
                 ],
                 'ebay-sold-product' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'ebaySoldProduct',
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'soldProductTicker',
                 ],
                 __NAMESPACE__ . 'baseLoaderProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
@@ -271,13 +284,13 @@ class ConfigProvider
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'searchLoaderManager',
                 ],
-                __NAMESPACE__ . 'soldProductSearchLoaderProcess' => [
+                __NAMESPACE__ . 'soldSearchLoaderProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'soldProductSearchLoaderManager',
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'soldSearchLoaderManager',
                 ],
-                __NAMESPACE__ . 'simpleSearchParserProcess' => [
+                __NAMESPACE__ . 'searchParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SimpleSearchParserManager::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SearchParserManager::class,
                 ],
                 __NAMESPACE__ . 'productParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
@@ -287,18 +300,14 @@ class ConfigProvider
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => CompatibleParserManager::class,
                 ],
-                __NAMESPACE__ . 'ebayMotorsSearchParserProcess' => [
+                __NAMESPACE__ . 'soldSearchParserProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => EbayMotorsSearchParserManager::class,
-                ],
-                __NAMESPACE__ . 'soldEbayMotorsSearchParserProcess' => [
-                    ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SoldEbayMotorsSearchParserManager::class,
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => SoldSearchParserManager::class,
                 ],
             ],
             AbstractParserManagerFactory::KEY => [
-                SimpleSearchParserManager::class => [
-                    SearchParserManagerFactory::KEY_PARSER => SimpleSearchParser::class,
+                SearchParserManager::class => [
+                    SearchParserManagerFactory::KEY_PARSER => __NAMESPACE__ . 'searchLazyParser',
                     SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
                     SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
                     SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => ProductEntityStoreInterface::class,
@@ -310,21 +319,8 @@ class ConfigProvider
                         'throughPagination' => 1,
                     ],
                 ],
-                EbayMotorsSearchParserManager::class => [
-                    SearchParserManagerFactory::KEY_PARSER => EbayMotorsSearchParser::class,
-                    SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
-                    SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
-                    SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => ProductEntityStoreInterface::class,
-                    SearchParserManagerFactory::KEY_OPTIONS => [
-                        'createProductParseTask' => 1,
-                        'productUri' => 'https://www.ebay.com/itm',
-                        'maxCorruptRecords' => 30,
-                        'saveCorruptedProducts' => 1,
-                        'throughPagination' => 1,
-                    ],
-                ],
-                SoldEbayMotorsSearchParserManager::class => [
-                    SearchParserManagerFactory::KEY_PARSER => SoldEbayMotorsSearchParser::class,
+                SoldSearchParserManager::class => [
+                    SearchParserManagerFactory::KEY_PARSER => __NAMESPACE__ . 'soldSearchLazyParser',
                     SearchParserManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskStoreEntityInterface::class,
                     SearchParserManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskStoreEntityInterface::class,
                     SearchParserManagerFactory::KEY_PARSE_RESULT_DATASTORE => SoldProductEntityStoreInterface::class,

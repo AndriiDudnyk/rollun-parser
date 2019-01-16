@@ -4,11 +4,11 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\parser\Parser\ParseResolver;
+namespace rollun\parser\Parser\ParserResolver;
 
 use rollun\parser\Parser\Parser\ParserInterface;
 
-interface ParseResolverInterface
+interface ParserResolverInterface
 {
-    public function getParser($document): ParserInterface;
+    public function getParser($document): ?ParserInterface;
 }

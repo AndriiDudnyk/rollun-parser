@@ -7,9 +7,9 @@
 namespace rollun\service\Parser\Ebay\Parser\Manager\Factory;
 
 use InvalidArgumentException;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\SoldEbayMotors as SoldEbayMotorsParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\SoldSearch as SoldEbayMotorsParserManager;
 
-class SoldEbayMotorsSearchFactory extends SearchFactory
+class SoldSearchFactory extends SearchFactory
 {
     protected function checkClass($class)
     {

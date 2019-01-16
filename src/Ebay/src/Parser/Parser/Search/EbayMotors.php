@@ -8,10 +8,12 @@ namespace rollun\service\Parser\Ebay\Parser\Parser\Search;
 
 use phpQuery as PhpQuery;
 use rollun\parser\Parser\Parser\HtmlParser;
+use rollun\parser\Parser\Parser\ParserInterface;
+use rollun\parser\Parser\ParserResolver\ParserResolverInterface;
 
-class EbayMotors extends HtmlParser
+final class EbayMotors extends HtmlParser implements ParserResolverInterface
 {
-    public const PARSER_NAME = 'ebayMotorsSearch';
+    public const PARSER_NAME = self::class;
 
     public function parse(string $data): array
     {
@@ -53,11 +55,13 @@ class EbayMotors extends HtmlParser
 
             $products[$key]['shipping'] = implode(' ', $products[$key]['shipping']);
 
-            $sellerInfo = trim($pq->find('.lvdetails li')->eq(2)->text());
+            $sellerInfo = trim($pq->find('.lvdetails li')->eq(1)->text());
             preg_match('/Seller:\s+([\w\W]+)\(.+\)/', $sellerInfo, $matches);
             $products[$key]['seller'] = $matches[1] ?? '';
 
             $hotnessText = trim($pq->find('.watch a')->text());
+
+            $products[$key]['date'] = $pq->find('.timeleft .tme span')->text();
 
             if (stristr($hotnessText, 'Watch')) {
                 $products[$key]['watch'] = $hotnessText;
@@ -72,5 +76,16 @@ class EbayMotors extends HtmlParser
         $result['nextPage'] = $document->find('#Pagination .pages .curr + a')->attr('href');
 
         return $result;
+    }
+
+    public function getParser($document): ?ParserInterface
+    {
+        return new self();
+    }
+
+    public function canParse(string $data): bool
+    {
+        $document = PhpQuery::newDocument($data);
+        return boolval($document->find('#ListViewInner > li')->count());
     }
 }

@@ -8,10 +8,12 @@ namespace rollun\service\Parser\Ebay\Parser\Parser\Search;
 
 use phpQuery as PhpQuery;
 use rollun\parser\Parser\Parser\HtmlParser;
+use rollun\parser\Parser\Parser\ParserInterface;
+use rollun\parser\Parser\ParserResolver\ParserResolverInterface;
 
-class Simple extends HtmlParser
+final class Simple extends HtmlParser implements ParserResolverInterface
 {
-    public const PARSER_NAME = 'ebaySimpleSearch';
+    public const PARSER_NAME = self::class;
 
     /**
      * @param string $data
@@ -46,10 +48,11 @@ class Simple extends HtmlParser
             $products[$key]['shipping'] = implode(' ', $products[$key]['shipping']);
 
             $sellerInfo = $pq->find('.s-item__seller-info-text')->text();
-            [,$sellerId,,,] = explode(' ', $sellerInfo);
+            [, $sellerId, , ,] = explode(' ', $sellerInfo);
             $products[$key]['seller'] = $sellerId;
 
             $hotnessText = $pq->find('.s-item__hotness>.NEGATIVE')->text();
+            $products[$key]['date'] = $pq->find('.timeleft .tme span')->text();
 
             if (stristr($hotnessText, 'Watching')) {
                 $products[$key]['watch'] = $hotnessText;
@@ -61,8 +64,20 @@ class Simple extends HtmlParser
         }
 
         $result['products'] = $products;
-        $result['nextPage'] = $document->find('.s-pagination .x-pagination__li--selected + li')->attr('href');
+        $result['nextPage'] = $document->find('.s-pagination .x-pagination__li--selected + li a')->attr('href');
 
         return $result;
+    }
+
+    public function canParse(string $data): bool
+    {
+        $document = PhpQuery::newDocument($data);
+
+        return boolval($document->find('.s-item__wrapper')->count());
+    }
+
+    public function getParser($document): ParserInterface
+    {
+        return new self();
     }
 }

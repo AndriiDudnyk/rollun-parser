@@ -10,7 +10,7 @@ use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
 use rollun\parser\Parser\Manager\BaseFactory;
 use rollun\parser\Parser\Manager\ParserManagerInterface;
-use rollun\service\Parser\Ebay\Parser\Manager\Search\Base as BaseSearchParserManager;
+use rollun\service\Parser\Ebay\Parser\Manager\Search as BaseSearchParserManager;
 
 class SearchFactory extends BaseFactory
 {

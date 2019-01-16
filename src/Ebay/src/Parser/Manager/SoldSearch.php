@@ -4,26 +4,26 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\service\Parser\Ebay\Parser\Manager\Search;
+namespace rollun\service\Parser\Ebay\Parser\Manager;
 
 use rollun\datastore\Rql\RqlQuery;
 use rollun\parser\DataStore\Entity\LoaderTaskInterface;
 use rollun\parser\DataStore\Entity\ParserTaskInterface;
-use rollun\service\Parser\Ebay\Parser\Parser\Search\SoldEbayMotors as SoldEbayMotorsSearchParser;
+use rollun\parser\Parser\Parser\ParserInterface;
 use Psr\Log\LoggerInterface;
 use rollun\service\Parser\Ebay\DataStore\Entity\Interfaces\SoldProductInterface;
 use rollun\parser\Parser\Manager\Base as BaseParserManager;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 
-class SoldEbayMotors extends BaseParserManager
+class SoldSearch extends BaseParserManager
 {
     const DEF_MAX_CORRUPT_RECORDS = 30;
 
     protected $loaderTask;
 
     public function __construct(
-        SoldEbayMotorsSearchParser $parser,
+        ParserInterface $parser,
         SoldProductInterface $entity,
         ParserTaskInterface $parserTask,
         LoaderTaskInterface $loaderTask,
@@ -67,7 +67,7 @@ class SoldEbayMotors extends BaseParserManager
         }
 
         if ($result['nextPage'] && $this->options['throughPagination']) {
-            $this->loaderTask->addLoaderTask(SoldEbayMotorsSearchParser::PARSER_NAME, $result['nextPage']);
+            $this->loaderTask->addLoaderTask($this->parser->getName(), $result['nextPage']);
         } elseif (!$result['nextPage']) {
             $this->logger->warning('Next page not found or it can be last one in ' . static::class);
         }
@@ -79,7 +79,7 @@ class SoldEbayMotors extends BaseParserManager
     {
         foreach ($products as $product) {
             if ($this->isNewSoldProduct($product)) {
-                $this->entity->create($product);
+                $this->entity->create($this->createRecordForStore($product));
             }
         }
     }
@@ -88,8 +88,8 @@ class SoldEbayMotors extends BaseParserManager
     {
         $query = new RqlQuery();
         $query->setQuery(new AndNode([
-            new EqNode('item_id', $product['item_id']),
-            new EqNode('date', $product['date'])
+            new EqNode(SoldProductInterface::COLUMN_ITEM_ID, $product['item_id']),
+            new EqNode(SoldProductInterface::COLUMN_DATE, $product['date'])
         ]));
 
         $soldProducts = $this->entity->query($query);
@@ -102,5 +102,18 @@ class SoldEbayMotors extends BaseParserManager
         $properties = parent::__sleep();
 
         return array_merge($properties, ['loaderTask']);
+    }
+
+    protected function createRecordForStore($record)
+    {
+        return [
+            SoldProductInterface::COLUMN_ITEM_ID => $record['item_id'] ?? '',
+            SoldProductInterface::COLUMN_DATE => $record['data'] ?? '',
+            SoldProductInterface::COLUMN_URI => $record['uri'] ?? '',
+            SoldProductInterface::COLUMN_PRICE => $record['price'] ?? '',
+            SoldProductInterface::COLUMN_SELLER => $record['seller'] ?? '',
+            SoldProductInterface::COLUMN_SHIPPING => $record['shipping'] ?? '',
+            SoldProductInterface::COLUMN_TITLE => $record['title'] ?? '',
+        ];
     }
 }

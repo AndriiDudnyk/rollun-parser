@@ -6,7 +6,7 @@
 
 namespace rollun\service\Parser\Ebay\Loader\Manager;
 
-class SoldProductSearch extends Search
+class SoldSearch extends Search
 {
     protected function afterSave($loaderTask)
     {

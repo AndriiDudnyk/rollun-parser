@@ -123,11 +123,14 @@ class Proxy extends AspectAbstract implements ProxyInterface
         $query->setLimit(new LimitNode(1));
 
         $proxies = $this->query($query);
-        $proxy = current($proxies);
-        $this->update([
-            'id' => $proxy['id'],
-            'is_used' => 1,
-        ]);
+
+        if (count($proxies)) {
+            $proxy = current($proxies);
+            $this->update([
+                'id' => $proxy['id'],
+                'is_used' => 1,
+            ]);
+        }
     }
 
     public function __sleep()
