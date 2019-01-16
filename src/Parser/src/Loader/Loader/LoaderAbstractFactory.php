@@ -8,7 +8,6 @@ namespace rollun\parser\Loader\Loader;
 
 use Interop\Container\ContainerInterface;
 use InvalidArgumentException;
-use rollun\parser\UserAgentGenerator;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\ServiceManager\Factory\AbstractFactoryInterface;
 
@@ -27,10 +26,9 @@ class LoaderAbstractFactory implements AbstractFactoryInterface
 
         $requestFactory = new ServerRequestFactory();
         $options = $serviceConfig[self::KEY_OPTIONS] ?? [];
-        $userAgentGenerator = $container->get(UserAgentGenerator::class);
         $proxyDataStore = $container->get($serviceConfig[self::KEY_PROXY_DATASTORE]);
 
-        return new Base($userAgentGenerator, $proxyDataStore, $requestFactory, $options);
+        return new Base($proxyDataStore, $requestFactory, $options);
     }
 
     public function canCreate(ContainerInterface $container, $requestedName)

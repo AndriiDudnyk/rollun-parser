@@ -192,7 +192,7 @@ class Base implements LoaderInterface
 
     public function __sleep()
     {
-        return ['proxyDataStore', 'options', 'userAgentGenerator', 'requestFactory'];
+        return ['proxyDataStore', 'options', 'requestFactory'];
     }
 
     public function __wakeup()
