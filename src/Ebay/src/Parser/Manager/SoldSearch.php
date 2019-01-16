@@ -108,7 +108,7 @@ class SoldSearch extends BaseParserManager
     {
         return [
             SoldProductInterface::COLUMN_ITEM_ID => $record['item_id'] ?? '',
-            SoldProductInterface::COLUMN_DATE => $record['data'] ?? '',
+            SoldProductInterface::COLUMN_DATE => $record['date'] ?? '',
             SoldProductInterface::COLUMN_URI => $record['uri'] ?? '',
             SoldProductInterface::COLUMN_PRICE => $record['price'] ?? '',
             SoldProductInterface::COLUMN_SELLER => $record['seller'] ?? '',
