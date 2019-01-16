@@ -74,6 +74,12 @@ abstract class Base implements ParserManagerInterface
 
         $records = $this->parse($parserTask);
 
+        if (!$records) {
+            $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
+            $this->logger->error("Parser CAN NOT PARSE document #{$parserTask['id']}");
+            return;
+        }
+
         $this->save($records, $parserTask);
         $this->afterSave($parserTask);
     }
@@ -92,20 +98,22 @@ abstract class Base implements ParserManagerInterface
         }
     }
 
-    protected function parse($parserTask)
+    protected function parse($parserTask): array
     {
         try {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_IN_PROCESS);
 
-            return $this->parser->parse($parserTask['document']);
+            if ($this->parser->canParse($parserTask['document'])) {
+                return $this->parser->parse($parserTask['document']);
+            }
         } catch (\Throwable $e) {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
             $this->logger->error("Parser failed PARSE document #{$parserTask['id']}", [
                 'exception' => $e,
             ]);
-
-            return null;
         }
+
+        return [];
     }
 
     protected function processResult(array $data, $parserTask): array
