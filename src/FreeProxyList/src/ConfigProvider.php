@@ -31,7 +31,7 @@ use rollun\parser\Parser\Manager\BaseFactory as BaseParserManagerFactory;
 use rollun\parser\Parser\Manager\AbstractFactory as AbstractParserManagerFactory;
 
 // Loader managers
-use rollun\parser\Loader\Manager\Base as BaseLoaderManager;
+use rollun\service\Parser\FreeProxyList\Loader\Manager\Proxy as ProxyLoaderManager;
 use rollun\parser\Loader\Manager\AbstractFactory as AbstractLoaderManagerFactory;
 use rollun\parser\Loader\Manager\BaseFactory as BaseLoaderManagerFactory;
 
@@ -69,9 +69,9 @@ class ConfigProvider
                 ],
             ],
             InterruptAbstractFactoryAbstract::KEY => [
-                'proxy' => [
+                'proxyProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
-                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'proxy',
+                    ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'proxyTicker',
                 ],
                 __NAMESPACE__ . 'proxyLoaderProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
@@ -83,13 +83,13 @@ class ConfigProvider
                 ],
             ],
             CallbackAbstractFactoryAbstract::KEY => [
-                __NAMESPACE__ . 'proxy-loaders' => [
+                __NAMESPACE__ . 'proxyLoaders' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'proxyLoaderProcess',
                     ],
                 ],
-                __NAMESPACE__ . 'proxy-parsers' => [
+                __NAMESPACE__ . 'proxyParsers' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                         __NAMESPACE__ . 'proxyParserProcess',
@@ -98,20 +98,20 @@ class ConfigProvider
                 __NAMESPACE__ . 'proxyMultiplexer' => [
                     MultiplexerAbstractFactory::KEY_CLASS => Multiplexer::class,
                     MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
-                        __NAMESPACE__ . 'proxy-loaders',
-                        __NAMESPACE__ . 'proxy-parsers',
+                        __NAMESPACE__ . 'proxyLoaders',
+                        __NAMESPACE__ . 'proxyParsers',
                     ]
                 ],
-                __NAMESPACE__ . 'proxy' => [
+                __NAMESPACE__ . 'proxyTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('PROXY_TICK_COUNT')),
-                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('PROXY_TICK_DURATION')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(60 / getenv('PROXY_TICK_COUNT')),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'proxyMultiplexer',
                 ]
             ],
             AbstractLoaderManagerFactory::KEY => [
                 __NAMESPACE__ . 'proxyLoaderManager' => [
-                    BaseLoaderManagerFactory::KEY_CLASS => BaseLoaderManager::class,
+                    BaseLoaderManagerFactory::KEY_CLASS => ProxyLoaderManager::class,
                     BaseLoaderManagerFactory::KEY_LOADER => LoaderInterface::class,
                     BaseLoaderManagerFactory::KEY_LOADER_TASK_DATASTORE => LoaderTaskInterface::class,
                     BaseLoaderManagerFactory::KEY_PARSER_TASK_DATASTORE => ParserTaskInterface::class,

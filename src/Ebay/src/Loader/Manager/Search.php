@@ -31,6 +31,12 @@ class Search extends BaseLoaderManager
         $this->searchPageHelper = $searchPageHelper;
     }
 
+    public function executeLoading()
+    {
+        $this->options[LoaderInterface::ALLOW_REDIRECT_OPTION] = true;
+        parent::executeLoading();
+    }
+
     /**
      * @param $loaderTask
      * @return string

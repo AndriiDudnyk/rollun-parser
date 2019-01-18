@@ -53,11 +53,29 @@ abstract class Base implements ParserManagerInterface
 
     public function __invoke()
     {
+        $startTime = microtime(true);
+        $failed = false;
+
         try {
-            $this->executeParsing();
+            $parserTaskId = $this->executeParsing();
         } catch (\Throwable $e) {
+            $failed = true;
             $this->logger->critical('Failed invoke parsing', ['exception' => $e]);
         }
+
+        $endTime = microtime(true);
+        $parseTime = $endTime - $startTime;
+        $timed = 'Start at ' . date('m.d H:i:s', intval($startTime))
+            . '. End at ' . date('m.d H:i:s', intval($endTime));
+
+        if (isset($parserTaskId)) {
+            $isFailed = $failed ? ' and failed' : '';
+            $message = "Parsing task #{$parserTaskId} take {$parseTime} microseconds{$isFailed}. {$timed}";
+        } else {
+            $message = "Parsing without task take {$parseTime} microseconds. {$timed}";
+        }
+
+        $this->logger->info($message);
     }
 
     public function executeParsing()
@@ -65,7 +83,7 @@ abstract class Base implements ParserManagerInterface
         if (!$parserTask = $this->getNewParserTask($this->parser->getName())) {
             $this->logger->debug("Free documents for parser manager not found");
 
-            return;
+            return null;
         }
 
         $this->setOptions($parserTask['options']);
@@ -77,11 +95,14 @@ abstract class Base implements ParserManagerInterface
         if (!$records) {
             $this->parserTask->setStatus($parserTask['id'], ParserTaskInterface::STATUS_FAILED);
             $this->logger->error("Parser CAN NOT PARSE document #{$parserTask['id']}");
-            return;
+
+            return $parserTask['id'];
         }
 
         $this->save($records, $parserTask);
         $this->afterSave($parserTask);
+
+        return $parserTask['id'];
     }
 
     protected function save($records, $parserTask)

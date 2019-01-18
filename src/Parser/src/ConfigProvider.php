@@ -40,7 +40,6 @@ class ConfigProvider
         return [
             'dependencies' => [
                 'invokables' => [
-                    UserAgentGenerator::class => UserAgentGenerator::class,
                     Heartbeat::class => Heartbeat::class,
                 ],
                 'factories' => [
@@ -72,12 +71,13 @@ class ConfigProvider
                         LoaderInterface::FAKE_USER_AGENT_OPTION => 1,
                         LoaderInterface::MAX_ATTEMPTS_OPTION => 30,
                         LoaderInterface::CONNECTION_TIMEOUT_OPTION => 10,
-                        LoaderInterface::ALLOW_REDIRECT_OPTION => 1,
+                        LoaderInterface::READ_TIMEOUT_OPTION => 10,
+                        LoaderInterface::ALLOW_REDIRECT_OPTION => 0,
                     ],
                 ],
             ],
             InterruptAbstractFactoryAbstract::KEY => [
-                'loader-heartbeat' => [
+                'loaderHeartbeatProcess' => [
                     InterruptAbstractFactoryAbstract::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'loaderHeartbeatTicker'
                 ],
@@ -86,7 +86,7 @@ class ConfigProvider
                 __NAMESPACE__ . 'loaderHeartbeatTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('LOADER_HEARTBEAT_TICK_COUNT')),
-                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('LOADER_HEARTBEAT_TICK_DURATION')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(60 / getenv('LOADER_HEARTBEAT_TICK_COUNT')),
                     TickerAbstractFactory::KEY_CALLBACK => Heartbeat::class,
                 ]
             ],

@@ -50,7 +50,7 @@ class Proxy extends AspectAbstract implements ProxyInterface
             return parent::create($itemData, $rewriteIfExist);
         }
 
-        if ($record = $this->getRecordByFields($itemData)) {
+        if ($record = $this->getRecordByFields(['uri' => $itemData['uri']])) {
             return $record;
         }
 

@@ -89,20 +89,39 @@ class Base implements LoaderInterface
         $method = $request->getMethod();
 
         $maxAttempts = $this->options[self::MAX_ATTEMPTS_OPTION] ?? self::DEF_MAX_ATTEMPTS;
-        $attempt = 0;
+        $attempt = 1;
 
         do {
             $attempt++;
             $proxy = $this->changeProxy($proxy ?? null);
+            $startTime = microtime(true);
+            $client = $this->createClient($proxy);
 
             try {
-                $response = $this->createClient($proxy)->request($method, $uri);
+                $this->logger->debug('Sent http request using Guzzlehttp', [
+                    'uri' => $uri,
+                    'proxy' => $proxy,
+                    'start_time' => date('d.m H:i:s', intval($startTime))
+                ]);
+                $response = $client->request($method, $uri);
+                $this->logger->debug('Retrieve http response using Guzzlehttp', [
+                    'uri' => $uri,
+                    'proxy' => $proxy,
+                ]);
             } catch (RequestException $e) {
-                $this->logger->debug('Failed to fetch request', [
-                    'exception' => $e
+                $this->logger->debug('Failed to fetch http response using Guzzlehttp', [
+                    'exception' => $e,
+                    'uri' => $uri,
+                    'proxy' => $proxy,
                 ]);
                 $response = $e->getResponse();
             }
+
+            $this->logger->debug('Fetching http response using Guzzlehttp', [
+                'uri' => $uri,
+                'proxy' => $proxy,
+                'end_time' => date('d.m H:i:s', intval($startTime))
+            ]);
         } while ((!$this->validateResponse($response) && $attempt < $maxAttempts));
 
         if (!$this->validateResponse($response)) {
@@ -147,7 +166,7 @@ class Base implements LoaderInterface
             throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
         }
 
-        $this->logger->debug("Change proxy '{$oldProxyUri}' on '{$newProxyUri}'");
+        $this->logger->debug("Change proxy from '{$oldProxyUri}' to '{$newProxyUri}'");
 
         return $newProxyUri;
     }
@@ -176,7 +195,7 @@ class Base implements LoaderInterface
         }
 
         if (isset($this->options[self::ALLOW_REDIRECT_OPTION])) {
-            $options['allow_redirects'] = true;
+            $options['allow_redirects'] = boolval($this->options[self::ALLOW_REDIRECT_OPTION]);
         }
 
         if (isset($this->options[self::CONNECTION_TIMEOUT_OPTION])) {
@@ -184,6 +203,10 @@ class Base implements LoaderInterface
         }
 
         $this->logger->debug("Create client", [
+            'options' => $options,
+        ]);
+
+        $this->logger->debug('Create Guzzlehttp client with options', [
             'options' => $options
         ]);
 

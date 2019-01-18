@@ -35,6 +35,8 @@ class Base implements LoaderManagerInterface
      */
     protected $logger;
 
+    protected $options;
+
     /**
      * Base constructor.
      * @param LoaderInterface $loader
@@ -42,6 +44,7 @@ class Base implements LoaderManagerInterface
      * @param ParserTaskInterface $parserTask
      * @param array $parserNames
      * @param LoggerInterface|null $logger
+     * @param array $options
      * @throws ReflectionException
      */
     public function __construct(
@@ -49,22 +52,42 @@ class Base implements LoaderManagerInterface
         LoaderTaskInterface $loaderTask,
         ParserTaskInterface $parserTask,
         array $parserNames,
-        LoggerInterface $logger = null
+        LoggerInterface $logger = null,
+        $options = []
     ) {
         InsideConstruct::setConstructParams(["logger" => LoggerInterface::class]);
         $this->parserNames = $parserNames;
         $this->loader = $loader;
         $this->loaderTask = $loaderTask;
         $this->parserTask = $parserTask;
+        $this->options = $options;
     }
 
     public function __invoke()
     {
+        $startTime = microtime(true);
+        $failed = false;
+
         try {
-            $this->executeLoading();
+            $loaderTaskId = $this->executeLoading();
         } catch (\Throwable $e) {
+            $failed = true;
             $this->logger->critical('Failed invoke loading', ['exception' => $e]);
         }
+
+        $endTime = microtime(true);
+        $parseTime = $endTime - $startTime;
+        $timed = 'Start at ' . date('m.d H:i:s', intval($startTime))
+            . '. End at ' . date('m.d H:i:s', intval($endTime));
+
+        if (isset($loaderTaskId)) {
+            $isFailed = $failed ? ' and failed' : '';
+            $message = "Loading task #{$loaderTaskId} take {$parseTime} microseconds{$isFailed}. {$timed}";
+        } else {
+            $message = "Loading without task take {$parseTime} microseconds. {$timed}";
+        }
+
+        $this->logger->info($message);
     }
 
     public function executeLoading()
@@ -72,17 +95,21 @@ class Base implements LoaderManagerInterface
         if (!$loaderTask = $this->getNewLoaderTask()) {
             $this->logger->debug("Free task for '" . static::class . "' loader manager not found");
 
-            return;
+            return null;
         }
 
         $this->logger->debug("Loader start task #{$loaderTask['id']}");
 
         if (!$document = $this->load($loaderTask)) {
-            return;
+            $this->parserTask->setStatus($loaderTask['id'], ParserTaskInterface::STATUS_FAILED);
+            $this->logger->error("Loader CAN NOT LOAD document #{$loaderTask['id']}");
+            return $loaderTask['id'];
         }
 
         $this->save($loaderTask, $document);
         $this->afterSave($loaderTask);
+
+        return $loaderTask['id'];
     }
 
     protected function save($loaderTask, $document)
@@ -136,11 +163,12 @@ class Base implements LoaderManagerInterface
         $this->parserTask->addParserTask($loaderTask['parser'], $document, $parserTaskOptions);
     }
 
-    protected function getLoader($options): LoaderInterface
+    protected function getLoader(array $options): LoaderInterface
     {
+        $loaderOptions = array_merge($options, $this->options);
         $loader = clone $this->loader;
-        unset($options[ParserManagerInterface::KEY_OPTIONS]);
-        $loader->setOptions($options);
+        unset($loaderOptions[ParserManagerInterface::KEY_OPTIONS]);
+        $loader->setOptions($loaderOptions);
 
         return $loader;
     }
@@ -154,7 +182,7 @@ class Base implements LoaderManagerInterface
         $this->loaderTask->create([
             'uri' => $loaderTask['uri'],
             'parser' => $loaderTask['parser'],
-            'status' => LoaderTaskInterface::STATUS_NEW
+            'status' => LoaderTaskInterface::STATUS_NEW,
         ]);
     }
 

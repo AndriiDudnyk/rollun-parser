@@ -4,20 +4,16 @@
  * @license LICENSE.md New BSD License
  */
 
-namespace rollun\service\Parser\Ebay\Loader\Manager;
+namespace rollun\service\Parser\FreeProxyList\Loader\Manager;
 
 use rollun\parser\Loader\Loader\LoaderInterface;
+use rollun\parser\Loader\Manager\Base;
 
-class SoldSearch extends Search
+class Proxy extends Base
 {
     public function executeLoading()
     {
-        $this->options[LoaderInterface::ALLOW_REDIRECT_OPTION] = true;
+        $this->options[LoaderInterface::USE_PROXY_OPTION] = 0;
         parent::executeLoading();
-    }
-
-    protected function afterSave($loaderTask)
-    {
-        $this->repeatTask($loaderTask);
     }
 }

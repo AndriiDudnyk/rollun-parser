@@ -25,6 +25,7 @@ interface LoaderInterface extends ClientInterface
     const COOKIE_DOMAIN_OPTION = 'cookieDomain'; // string
     const ALLOW_REDIRECT_OPTION = 'allowRedirect'; // bool
     const CONNECTION_TIMEOUT_OPTION = 'connectionTimeout'; // int
+    const READ_TIMEOUT_OPTION = 'readTimeout'; // int
     const CREATE_TASK_IF_NO_PROXIES_OPTION = 'createTaskIfNoProxy';
 
     /**

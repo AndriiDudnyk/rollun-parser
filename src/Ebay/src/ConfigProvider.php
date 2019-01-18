@@ -84,6 +84,8 @@ use rollun\parser\Parser\ParserResolver\SimpleAbstractFactory as SimpleParserRes
  */
 class ConfigProvider
 {
+    const __NAMESPACE__ = __NAMESPACE__;
+
     /**
      * Returns the configuration array
      *
@@ -257,22 +259,22 @@ class ConfigProvider
                 __NAMESPACE__ . 'productTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
                     TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_PRODUCT_TICK_COUNT')),
-                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_PRODUCT_TICK_DURATION')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(60 / getenv('EBAY_PRODUCT_TICK_COUNT')),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'productMultiplexer',
                 ],
                 __NAMESPACE__ . 'soldProductTicker' => [
                     TickerAbstractFactory::KEY_CLASS => Ticker::class,
-                    TickerAbstractFactory::KEY_TICKS_COUNT => intval(getenv('EBAY_SOLD_PRODUCT_TICK_COUNT')),
-                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_SOLD_PRODUCT_TICK_DURATION')),
+                    TickerAbstractFactory::KEY_TICKS_COUNT => intval(60 / getenv('EBAY_SOLD_PRODUCT_TICK_COUNT')),
+                    TickerAbstractFactory::KEY_TICK_DURATION => intval(getenv('EBAY_SOLD_PRODUCT_TICK_COUNT')),
                     TickerAbstractFactory::KEY_CALLBACK => __NAMESPACE__ . 'soldProductMultiplexer',
                 ],
             ],
             InterruptAbstractFactoryAbstract::KEY => [
-                'ebay-product' => [
+                'ebayProductProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'productTicker',
                 ],
-                'ebay-sold-product' => [
+                'ebaySoldProductProcess' => [
                     ProcessAbstractFactory::KEY_CLASS => Process::class,
                     ProcessAbstractFactory::KEY_CALLBACK_SERVICE => __NAMESPACE__ . 'soldProductTicker',
                 ],
