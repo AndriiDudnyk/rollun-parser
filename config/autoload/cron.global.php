@@ -18,7 +18,7 @@ return [
             MultiplexerAbstractFactory::KEY_CALLBACKS_SERVICES => [
                 'ebayProductProcess',
                 'loaderHeartbeatProcess',
-//                'ebaySoldProductProcess',
+                'ebaySoldProductProcess',
                 'proxyProcess',
             ],
         ],

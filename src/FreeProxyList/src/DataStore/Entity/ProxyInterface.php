@@ -13,6 +13,7 @@ interface ProxyInterface extends DataStoresInterface
     const COLUMN_URI = 'uri';
     const COLUMN_IS_USED = 'is_used';
     const COLUMN_CREATED_AT = 'created_at';
+    const COLUMN_USAGE = 'usage';
 
     public function addNewUri($uri);
 

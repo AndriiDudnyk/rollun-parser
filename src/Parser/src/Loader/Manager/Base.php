@@ -101,7 +101,7 @@ class Base implements LoaderManagerInterface
         $this->logger->debug("Loader start task #{$loaderTask['id']}");
 
         if (!$document = $this->load($loaderTask)) {
-            $this->parserTask->setStatus($loaderTask['id'], ParserTaskInterface::STATUS_FAILED);
+            $this->loaderTask->setStatus($loaderTask['id'], ParserTaskInterface::STATUS_FAILED);
             $this->logger->error("Loader CAN NOT LOAD document #{$loaderTask['id']}");
             return $loaderTask['id'];
         }
