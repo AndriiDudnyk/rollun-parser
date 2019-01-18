@@ -55,9 +55,17 @@ final class EbayMotors extends HtmlParser implements ParserResolverInterface
 
             $products[$key]['shipping'] = implode(' ', $products[$key]['shipping']);
 
-            $sellerInfo = trim($pq->find('.lvdetails li')->eq(1)->text());
-            preg_match('/Seller:\s+([\w\W]+)\(.+\)/', $sellerInfo, $matches);
-            $products[$key]['seller'] = $matches[1] ?? '';
+            $details = $pq->find('.lvdetails li');
+
+            foreach ($details as $detail) {
+                $sellerInfo = pq($detail)->text();
+                preg_match('/Seller:\s+([\w\W]+)\(.+\)/', $sellerInfo, $matches);
+
+                if ($matches[1]) {
+                    $products[$key]['seller'] = $matches[1] ?? '';
+                }
+            }
+            $products[$key]['seller'] = $products[$key]['seller'] ?? '';
 
             $hotnessText = trim($pq->find('.watch a')->text());
 
