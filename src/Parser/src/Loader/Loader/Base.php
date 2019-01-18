@@ -15,11 +15,11 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
 use rollun\dic\InsideConstruct;
-use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface;
+use rollun\service\Parser\FreeProxyList\ProxySystem;
 
 class Base implements LoaderInterface
 {
-    protected $proxyDataStore;
+    protected $proxySystem;
 
     protected $options;
 
@@ -32,23 +32,23 @@ class Base implements LoaderInterface
 
     /**
      * Base constructor.
-     * @param ProxyInterface $proxyDataStore
+     * @param ProxySystem $proxySystem
      * @param ServerRequestFactoryInterface $requestFactory
      * @param array $options
      * @param LoggerInterface|null $logger
      * @throws ReflectionException
      */
     public function __construct(
-        ProxyInterface $proxyDataStore,
+        ProxySystem $proxySystem,
         ServerRequestFactoryInterface $requestFactory,
         array $options = [],
         LoggerInterface $logger = null
     ) {
         InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
 
-        $this->proxyDataStore = $proxyDataStore;
-        $this->setOptions($options);
+        $this->proxySystem = $proxySystem;
         $this->requestFactory = $requestFactory;
+        $this->setOptions($options);
     }
 
     public function setOptions($options, $override = true)
@@ -93,7 +93,13 @@ class Base implements LoaderInterface
 
         do {
             $attempt++;
-            $proxy = $this->changeProxy($proxy ?? null);
+
+            $createTaskIfNoExist = (bool)$this->options[self::CREATE_TASK_IF_NO_PROXIES_OPTION] ??
+                self::DEF_CREATE_TASK_IF_NO_PROXIES;
+            if (!$proxy = $this->proxySystem->get($createTaskIfNoExist)) {
+                throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
+            }
+
             $startTime = microtime(true);
             $client = $this->createClient($proxy);
 
@@ -115,13 +121,16 @@ class Base implements LoaderInterface
                     'proxy' => $proxy,
                 ]);
                 $response = $e->getResponse();
+                $this->proxySystem->failed($uri);
             }
 
+            $endTime = microtime(true);
             $this->logger->debug('Fetching http response using Guzzlehttp', [
                 'uri' => $uri,
                 'proxy' => $proxy,
-                'end_time' => date('d.m H:i:s', intval($startTime))
+                'end_time' => date('d.m H:i:s', intval($endTime))
             ]);
+            $this->proxySystem->changeLevel($uri, $endTime - $startTime);
         } while ((!$this->validateResponse($response) && $attempt < $maxAttempts));
 
         if (!$this->validateResponse($response)) {
@@ -141,34 +150,6 @@ class Base implements LoaderInterface
     {
         return isset($response)
             && $response->getStatusCode() < 400;
-    }
-
-    /**
-     * @param null $oldProxyUri
-     * @return string|null
-     */
-    protected function changeProxy($oldProxyUri = null)
-    {
-        $useProxy = $this->options[self::USE_PROXY_OPTION] ?? false;
-
-        if (!$useProxy) {
-            return null;
-        }
-
-        if ($oldProxyUri) {
-            $this->proxyDataStore->setUsedProxy($oldProxyUri);
-        }
-
-        $createTaskIfNoExist = (bool)$this->options[self::CREATE_TASK_IF_NO_PROXIES_OPTION] ??
-            self::DEF_CREATE_TASK_IF_NO_PROXIES;
-
-        if (!$newProxyUri = $this->proxyDataStore->getUnusedProxy($createTaskIfNoExist)) {
-            throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
-        }
-
-        $this->logger->debug("Change proxy from '{$oldProxyUri}' to '{$newProxyUri}'");
-
-        return $newProxyUri;
     }
 
     /**
