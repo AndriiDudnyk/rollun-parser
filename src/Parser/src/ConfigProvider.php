@@ -27,11 +27,13 @@ use rollun\parser\DataStore\Page\PagePluginManager;
 use rollun\parser\Loader\Heartbeat;
 use rollun\parser\Loader\Loader\LoaderAbstractFactory;
 use rollun\parser\Loader\Loader\LoaderInterface;
+use rollun\parser\Loader\Loader\ResponseValidator\StatusOk;
 use rollun\parser\Parser\Parser\LazyParserAbstractFactory;
 use rollun\parser\Parser\Parser\ParserPluginManager;
 use rollun\parser\Parser\Parser\ParserPluginManagerFactory;
 use rollun\parser\Parser\ParserResolver\SimpleAbstractFactory as SimpleParserResolverAbstractFactory;
-use rollun\service\Parser\FreeProxyList\DataStore\Entity\ProxyInterface as ProxyEntityStoreInterface;
+use rollun\service\Parser\FreeProxyList\ProxyManager;
+use Zend\ServiceManager\Factory\InvokableFactory;
 
 class ConfigProvider
 {
@@ -47,6 +49,7 @@ class ConfigProvider
                     PageDetector::class => PageDetectorFactory::class,
                     PagePluginManager::class => PagePluginManagerFactory::class,
                     ParserPluginManager::class => ParserPluginManagerFactory::class,
+                    StatusOk::class => InvokableFactory::class,
                 ],
                 'abstract_factories' => [
                     LoaderAbstractFactory::class,
@@ -63,7 +66,7 @@ class ConfigProvider
             ],
             LoaderAbstractFactory::class => [
                 __NAMESPACE__ . 'baseLoader' => [
-                    LoaderAbstractFactory::KEY_PROXY_DATASTORE => ProxyEntityStoreInterface::class,
+                    LoaderAbstractFactory::KEY_PROXY_SYSTEM => ProxyManager::class,
                     LoaderAbstractFactory::KEY_OPTIONS => [
                         LoaderInterface::CREATE_TASK_IF_NO_PROXIES_OPTION => 1,
                         LoaderInterface::COOKIE_DOMAIN_OPTION => '.ebay.com',

@@ -15,7 +15,8 @@ use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
 use rollun\dic\InsideConstruct;
-use rollun\service\Parser\FreeProxyList\ProxySystem;
+use rollun\service\Parser\FreeProxyList\ProxyManager;
+use Zend\Validator\ValidatorInterface;
 
 class Base implements LoaderInterface
 {
@@ -26,26 +27,34 @@ class Base implements LoaderInterface
     protected $requestFactory;
 
     /**
+     * @var ValidatorInterface
+     */
+    protected $validator;
+
+    /**
      * @var LoggerInterface
      */
     protected $logger;
 
     /**
      * Base constructor.
-     * @param ProxySystem $proxySystem
+     * @param ProxyManager $proxySystem
      * @param ServerRequestFactoryInterface $requestFactory
+     * @param ValidatorInterface $validator
      * @param array $options
      * @param LoggerInterface|null $logger
      * @throws ReflectionException
      */
     public function __construct(
-        ProxySystem $proxySystem,
+        ProxyManager $proxySystem,
         ServerRequestFactoryInterface $requestFactory,
+        ValidatorInterface $validator,
         array $options = [],
         LoggerInterface $logger = null
     ) {
-        InsideConstruct::setConstructParams(['logger' => LoggerInterface::class]);
+        InsideConstruct::setConstructParams(['logger' => LoggerInterface::class,]);
 
+        $this->validator = $validator;
         $this->proxySystem = $proxySystem;
         $this->requestFactory = $requestFactory;
         $this->setOptions($options);
@@ -71,10 +80,6 @@ class Base implements LoaderInterface
         $request = $this->requestFactory->createServerRequest('GET', $uri);
         $response = $this->sendRequest($request);
 
-        if ($response->getStatusCode() != 200) {
-            throw LoaderException::createCannotLoadException($uri, $response);
-        }
-
         return $response->getBody()->getContents();
     }
 
@@ -93,27 +98,25 @@ class Base implements LoaderInterface
 
         do {
             $attempt++;
-
-            $createTaskIfNoExist = (bool)$this->options[self::CREATE_TASK_IF_NO_PROXIES_OPTION] ??
-                self::DEF_CREATE_TASK_IF_NO_PROXIES;
-            if (!$proxy = $this->proxySystem->get($createTaskIfNoExist)) {
-                throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
-            }
-
             $startTime = microtime(true);
+            $proxy = $this->getProxy();
             $client = $this->createClient($proxy);
 
             try {
                 $this->logger->debug('Sent http request using Guzzlehttp', [
                     'uri' => $uri,
                     'proxy' => $proxy,
-                    'start_time' => date('d.m H:i:s', intval($startTime))
+                    'start_time' => date('d.m H:i:s', intval($startTime)),
                 ]);
                 $response = $client->request($method, $uri);
-                $this->logger->debug('Retrieve http response using Guzzlehttp', [
+                $endTime = microtime(true);
+                $this->logger->debug('Fetching http response using Guzzlehttp', [
                     'uri' => $uri,
                     'proxy' => $proxy,
+                    'end_time' => date('d.m H:i:s', intval($endTime)),
                 ]);
+                $this->proxySystem->changeLevel($proxy, $endTime - $startTime);
+
             } catch (RequestException $e) {
                 $this->logger->debug('Failed to fetch http response using Guzzlehttp', [
                     'exception' => $e,
@@ -121,23 +124,33 @@ class Base implements LoaderInterface
                     'proxy' => $proxy,
                 ]);
                 $response = $e->getResponse();
-                $this->proxySystem->failed($uri);
+                $this->proxySystem->failed($proxy);
             }
+        } while ((!$this->validator->isValid($response) && $attempt < $maxAttempts));
 
-            $endTime = microtime(true);
-            $this->logger->debug('Fetching http response using Guzzlehttp', [
-                'uri' => $uri,
-                'proxy' => $proxy,
-                'end_time' => date('d.m H:i:s', intval($endTime))
-            ]);
-            $this->proxySystem->changeLevel($uri, $endTime - $startTime);
-        } while ((!$this->validateResponse($response) && $attempt < $maxAttempts));
-
-        if (!$this->validateResponse($response)) {
+        if (!$this->validator->isValid($response)) {
             throw new ClientException("Can't fetch response using {$attempt} attempts", $request);
         }
 
         return $response;
+    }
+
+    protected function getProxy()
+    {
+        $useProxy = $this->options[self::USE_PROXY_OPTION] ?? false;
+
+        if (!$useProxy) {
+            return null;
+        }
+
+        $createTaskIfNoExist = (bool)$this->options[self::CREATE_TASK_IF_NO_PROXIES_OPTION] ??
+            self::DEF_CREATE_TASK_IF_NO_PROXIES;
+
+        if (!$proxy = $this->proxySystem->get($createTaskIfNoExist)) {
+            throw LoaderException::createProxyRunOutException($createTaskIfNoExist);
+        }
+
+        return $proxy;
     }
 
     /**
@@ -188,7 +201,7 @@ class Base implements LoaderInterface
         ]);
 
         $this->logger->debug('Create Guzzlehttp client with options', [
-            'options' => $options
+            'options' => $options,
         ]);
 
         return new Client($options);
@@ -196,7 +209,7 @@ class Base implements LoaderInterface
 
     public function __sleep()
     {
-        return ['proxyDataStore', 'options', 'requestFactory'];
+        return ['proxySystem', 'options', 'requestFactory', 'validator'];
     }
 
     public function __wakeup()

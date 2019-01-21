@@ -61,8 +61,9 @@ CREATE TABLE IF NOT EXISTS `proxies`
 (
   `id`                     VARCHAR(256) NOT NULL,
   `uri`                    VARCHAR(256) NOT NULL,
-  `is_used`                VARCHAR(256) NOT NULL,
+  `level`                  VARCHAR(256) NOT NULL,
   `created_at`             VARCHAR(256) NOT NULL,
+  `updated_at`             VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 

@@ -15,6 +15,7 @@ interface LoaderInterface extends ClientInterface
     const DEF_MAX_ATTEMPTS = 1;
     const DEF_USER_AGENT_OS = 'linux';
     const DEF_CREATE_TASK_IF_NO_PROXIES = false;
+    const DEF_RESPONSE_VALIDATOR = 'statusOk';
 
     // Options
     const MAX_ATTEMPTS_OPTION = 'maxAttempts'; // int
@@ -27,6 +28,7 @@ interface LoaderInterface extends ClientInterface
     const CONNECTION_TIMEOUT_OPTION = 'connectionTimeout'; // int
     const READ_TIMEOUT_OPTION = 'readTimeout'; // int
     const CREATE_TASK_IF_NO_PROXIES_OPTION = 'createTaskIfNoProxy';
+    const VALIDATOR_SERVICE_OPTION = 'validatorService';
 
     /**
      * @param string $uri

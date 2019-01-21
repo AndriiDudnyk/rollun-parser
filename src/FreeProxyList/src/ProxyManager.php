@@ -17,10 +17,11 @@ use Xiag\Rql\Parser\Node\LimitNode;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\NotNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\GtNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\LtNode;
 use Xiag\Rql\Parser\Node\SortNode;
 
-class ProxySystem
+class ProxyManager
 {
     protected $proxy;
 
@@ -65,14 +66,14 @@ class ProxySystem
     {
         $proxy = $this->getProxy();
 
-        if ($proxy && $createTaskIfNotExist) {
+        if (!$proxy && $createTaskIfNotExist) {
             $taskId = $this->loaderTask->addLoaderTask(HomePage::PARSER_NAME, $this->uri, $this->loaderTaskOptions);
             $this->logger->info("Create new task #{$taskId}");
 
             return null;
         }
 
-        return $proxy;
+        return $proxy[ProxyInterface::COLUMN_URI];
     }
 
     public function upgrade(string $uri)
@@ -128,7 +129,7 @@ class ProxySystem
 
         $this->proxy->update([
             $this->proxy->getIdentifier() => $proxy[$this->proxy->getIdentifier()],
-            ProxyInterface::COLUMN_LEVEL => ProxyInterface::MIN_LEVEL,
+            ProxyInterface::COLUMN_LEVEL => ProxyInterface::FAIL_LEVEL,
         ]);
     }
 
@@ -141,7 +142,7 @@ class ProxySystem
             $aggregate[] = $percentage['name'];
         }
 
-        $randomPercentage = $percentages[array_rand($aggregate)];
+        $randomPercentage = $percentages[array_rand($aggregate)]['name'];
 
         switch ($randomPercentage) {
             case 'BETTER_OLD_PROXY':
@@ -235,8 +236,7 @@ class ProxySystem
 
         return $this->getProxyByQueryNode(new AndNode([
             new LtNode(ProxyInterface::COLUMN_LEVEL, $averageLevel),
-            new NotNode([new EqNode(ProxyInterface::COLUMN_LEVEL, ProxyInterface::MIN_LEVEL)]),
-            new NotNode([new EqNode(ProxyInterface::COLUMN_LEVEL, ProxyInterface::FAIL_LEVEL)]),
+            new NotNode([new LtNode(ProxyInterface::COLUMN_LEVEL, ProxyInterface::MIN_LEVEL)]),
         ]), $sortNode);
     }
 
@@ -244,6 +244,21 @@ class ProxySystem
     {
         $averageLevel = (ProxyInterface::MAX_LEVEL + ProxyInterface::MIN_LEVEL) / 2;
 
-        return $this->getProxyByQueryNode(new LtNode(ProxyInterface::COLUMN_LEVEL, $averageLevel), $sortNode);
+        return $this->getProxyByQueryNode(new AndNode([
+            new GtNode(ProxyInterface::COLUMN_LEVEL, $averageLevel),
+            new NotNode([new GtNode(ProxyInterface::COLUMN_LEVEL, ProxyInterface::MAX_LEVEL)]),
+        ]), $sortNode);
+    }
+
+    public function __sleep()
+    {
+        return ['proxy', 'loaderTask', 'uri', 'loaderTaskOptions'];
+    }
+
+    public function __wakeup()
+    {
+        InsideConstruct::initWakeup([
+            "logger" => LoggerInterface::class,
+        ]);
     }
 }

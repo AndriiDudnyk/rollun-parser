@@ -9,14 +9,14 @@ namespace rollun\service\Parser\FreeProxyList;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 
-class ProxySystemFactory
+class ProxyManagerFactory
 {
     const KEY_LOADER_TASK_DATASTORE = 'loaderTaskDataStore';
     const KEY_PROXY_LIST_URI = 'freeProxyListUri';
     const KEY_PROXY_DATASTORE = 'proxyDataStore';
     const KEY_LOADER_TASK_OPTIONS = 'loaderTaskOptions';
 
-    public function __construct(ContainerInterface $container)
+    public function __invoke(ContainerInterface $container)
     {
         $serviceConfig = $container->get('config')[self::class] ?? [];
 
@@ -37,6 +37,6 @@ class ProxySystemFactory
         $loaderTaskDataStore = $container->get($serviceConfig[self::KEY_LOADER_TASK_DATASTORE]);
         $proxyDataStore = $container->get($serviceConfig[self::KEY_PROXY_DATASTORE]);
 
-        return new ProxySystem($proxyDataStore, $loaderTaskDataStore, $freeProxyListUri, $loaderTaskOptions);
+        return new ProxyManager($proxyDataStore, $loaderTaskDataStore, $freeProxyListUri, $loaderTaskOptions);
     }
 }
